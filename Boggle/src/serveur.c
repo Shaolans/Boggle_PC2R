@@ -16,6 +16,20 @@
 #include <sys/time.h>
 #include <arpa/inet.h>
 #include <sys/timerfd.h>
+#include <pthread.h>
+
+
+
+void * traitement(void *arg){
+	
+	int connexion = *(int *)arg;
+	
+	printf("Fin de la connexion pour le serveur\n");
+	printf("%d\n", connexion);
+	shutdown(connexion, 2);
+	pthread_exit(NULL);
+}
+
 
 int main(int argc, char **args){
 	
@@ -29,11 +43,17 @@ int main(int argc, char **args){
 	int port;
 	struct itimerspec timerValue;
 	int timersElapsed ;
+	pthread_attr_t attr;
+	pthread_t th;
+	
 	
 	if(argc != 2){
 		printf("Usage : numPort\n");
 		return EXIT_FAILURE;
 	}
+	
+	pthread_attr_init(&attr);
+	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
 	
 	port = atoi(args[1]);
 	
@@ -80,9 +100,9 @@ int main(int argc, char **args){
 		
 	max1++;
 	
-	timerValue.it_value.tv_sec = 1;
+	timerValue.it_value.tv_sec = 120;
     timerValue.it_value.tv_nsec = 0;
-    timerValue.it_interval.tv_sec = 1;
+    timerValue.it_interval.tv_sec = 120;
     timerValue.it_interval.tv_nsec = 0;
     
     if (timerfd_settime(fds[1], 0, &timerValue, NULL) < 0) {
@@ -112,7 +132,12 @@ int main(int argc, char **args){
 						perror("accept");
 						return EXIT_FAILURE;
 					}
-					shutdown(connexion, 2);
+					if(pthread_create(&th, &attr, traitement, &connexion)!=0){
+						printf("pthread_create\n");
+						shutdown(connexion, 2);
+						return EXIT_FAILURE;
+					}
+					
 				}
 				else{
 					printf("ICI TEMPS !\n");
@@ -131,125 +156,10 @@ int main(int argc, char **args){
 	}
 	
 	
-	
+	pthread_attr_destroy(&attr);
 	close(fds[0]);
 	close(fds[1]);
 	
 	return EXIT_SUCCESS;
 	
 }
-
-
-
-/*#define _XOPEN_SOURCE 700
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <netinet/in.h>
-#include <string.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <errno.h>
-#include <sys/socket.h>
-#include <netdb.h>
-
-#define N 10
-
-int main(int argc, char** args){
-	
-	int port;
-	struct sockaddr_in addr;
-	struct sockaddr_in exp;
-	socklen_t lenexp;
-	int sock;
-	char nomFic[80];
-	int fd;
-	int connexion;
-	int i=0;
-	pthread_t th;
-	
-	
-	if(argc != 2){
-		printf("Usage : numPort\n");
-		return EXIT_FAILURE;
-	}
-	
-	port = atoi(args[1]);
-	
-	memset(&addr, '\0', sizeof(addr));
-	addr.sin_family = AF_INET;
-	addr.sin_addr.s_addr = htonl(INADDR_ANY);
-	addr.sin_port = htons(port);
-	
-	if( (sock = socket(AF_INET, SOCK_STREAM, 0)) == -1){
-		perror("socket");
-		return EXIT_FAILURE;
-	}
-	
-	if(bind(sock, (struct sockaddr *)&addr, sizeof(addr))==-1){
-		perror("bind");
-		return EXIT_FAILURE;
-	}
-	
-	if(listen(sock, 1)==-1){
-		perror("listen");
-		return EXIT_FAILURE;
-	}
-	
-	while(i<2){
-		
-		if( (connexion=accept(sock, (struct sockaddr *)&exp, &lenexp))==-1){
-			perror("accept");
-			return EXIT_FAILURE;
-		}
-		
-		if(pthread_create(&th, NULL, passage, &connexion)!=0){
-			printf("pthread_create\n");
-			return EXIT_FAILURE;
-		}
-		
-		
-		i++;
-		
-		
-	}
-	
-	shutdown(connexion, 2);
-	close(sock);
-	
-	
-	
-	if( recvfrom(connexion, &nomFic, sizeof(nomFic), 0, NULL, NULL)==-1){
-		perror("recvfrom");
-		return EXIT_FAILURE;
-		
-	}
-	
-		
-	while(1){
-		if( recvfrom(connexion, &donnees, sizeof(donnees), 0, NULL, NULL)==-1){
-			perror("recvfrom");
-			return EXIT_FAILURE;
-		}
-		
-		printf("%s\n", donnees);
-		
-		if( (nbEcrit=write(fd, donnees, strlen(donnees)))==-1){
-			perror("write");
-			return EXIT_FAILURE;
-			
-		}
-		
-		if(nbEcrit<N){
-			printf("ICI %d\n", nbEcrit);
-			
-			break;
-			
-		}
-		
-	}
-
-	
-	return EXIT_SUCCESS;
-}*/
