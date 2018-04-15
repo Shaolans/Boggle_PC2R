@@ -4,7 +4,7 @@
 
 # Documentation: http://www.gnu.org/software/make/manual/make.html
 CC =gcc
-LDFLAGS =
+LDFLAGS = -lpthread
 CFLAGS =-W -Wall -std=c11 -ansi -pedantic -Iinclude
 
 DIR=.
@@ -13,6 +13,8 @@ OBJ=$(DIR)/obj/
 INCLUDE=$(DIR)/include/
 LIB=$(DIR)/lib/
 SRC=$(DIR)/src/
+
+HC=include/grille.h
 
 
 .SUFFIXES:
@@ -31,6 +33,10 @@ test-serveur: $(BIN)serveur
 	
 test-client: $(BIN)client
 	-$$PWD/bin/client 127.0.0.1 2005
+	
+$(BIN)serveur: $(OBJ)serveur.o $(OBJ)grille.o
+	@if [ -d $(BIN) ]; then : ; else mkdir $(BIN); fi
+	$(CC) -o $@ $^ $(LDFLAGS)
 
 
 $(BIN)%: $(OBJ)%.o

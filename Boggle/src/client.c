@@ -13,11 +13,17 @@
 #include <netdb.h>
 #include <string.h>
 
+#define MAX_FILE_NET_SIZE 100
+
 int main(int argc, char *argv[])
 {
     struct sockaddr_in dest; /* Nom du serveur */
     struct hostent *hp; 
     int sock;
+    char req[2048];
+	char var[]="mot=salut";
+	char buffer[MAX_FILE_NET_SIZE];
+	char userName[16] = "Amelito";
 
     if (argc != 3) {
         fprintf(stderr, "Usage : %s ip port\n", argv[0]);
@@ -45,9 +51,35 @@ int main(int argc, char *argv[])
         perror("connect");
         exit(1);
     }
-
-    printf("CX OK\n");
-
+    
+    
+	/*sprintf(req,"POST /definition.php HTTP/1.1\r\nHost: le-dictionnaire.com\r\nConnection: Close\r\nContent-type: application/x-www-form-urlencoded\r\nContent-Length: %d\r\n\r\n%s\r\n",strlen(var),var);
+    */
+    sprintf(req, "CONNEXION/%s/\n\r\r\n", userName); 
+        
+    
+    if(send(sock, req, strlen(req), 0)==-1){
+		printf("PB SEND\n");
+	}
+	if(recv(sock, buffer, sizeof(buffer), 0)==-1){
+		printf("PB RECV");
+	}
+	
+	printf(buffer);
+	
+	 sprintf(req, "SORT/%s/\n\r\n\r", userName); 
+        
+    
+    if(send(sock, req, strlen(req), 0)==-1){
+		printf("PB SEND\n");
+	}
+	if(recv(sock, buffer, sizeof(buffer), 0)==-1){
+		printf("PB RECV");
+	}
+	
+	
+	printf(buffer);
+	
     /* Fermer la connexion */
     shutdown(sock,2);
     close(sock);

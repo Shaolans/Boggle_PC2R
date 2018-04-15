@@ -17,17 +17,94 @@
 #include <arpa/inet.h>
 #include <sys/timerfd.h>
 #include <pthread.h>
+#include "grille.h"
+#include "hashmap.h"
 
+
+#define MAX_ARG 3
+
+char * grille;
 
 
 void * traitement(void *arg){
 	
+	char buffer[100];
+	char *parse;
+	char argv[MAX_ARG][20];
+	int i = 0;
+	char message[100];
+	char *userName = malloc(sizeof(char)*20);
+	int nb_req=0;
+	
 	int connexion = *(int *)arg;
 	
-	printf("Fin de la connexion pour le serveur\n");
-	printf("%d\n", connexion);
+	while(nb_req < 2){
+		i=0;
+		recv(connexion, buffer, sizeof(buffer), 0);
+		
+		printf(buffer);
+		
+		parse = strtok(buffer, "/");
+		
+		while(parse){
+			
+			if(i>=MAX_ARG)
+				break;
+			
+			strcpy(argv[i]	, parse);
+					
+			i++;
+			
+			parse = strtok(NULL, "/");
+			
+		}
+		
+		if(strcmp(argv[0], "CONNEXION")==0){
+			memcpy(userName, argv[1], sizeof(argv[1]));
+			
+			
+			
+			sprintf(message, "BIENVENUE/%s/\n\r",grille);
+			
+			send(connexion, message, sizeof(message), 0);
+		}
+		else{
+			if(strcmp(argv[0], "SORT")==0){
+				
+				/*Ce n'est pas ca : il faut l'envoyer aux autres clients*/
+				sprintf(message, "DECONNEXION/%s/\n\r", userName);
+				
+				send(connexion, message, sizeof(message), 0);
+				break;
+			}
+			else{
+				if(strcmp(argv[0], "TROUVE")==0){
+					
+				}
+				else{
+					printf("Requete recue de format inconnu");
+					
+				}
+				
+			}
+		}
+		
+		
+		nb_req ++;
+		
+		
+	}
+	
+
+	
+
+	
+	printf("Fin de la connexion pour le serveur %d\n", connexion);
+	
 	shutdown(connexion, 2);
-	pthread_exit(NULL);
+	free(arg);
+	free(userName);
+	return NULL;
 }
 
 
@@ -38,6 +115,7 @@ int main(int argc, char **args){
 	int fds[2];
 	int i;
 	int connexion;
+	int *pconnexion;
 	socklen_t fromlen;
 	int max1 =0;
 	int port;
@@ -45,7 +123,7 @@ int main(int argc, char **args){
 	int timersElapsed ;
 	pthread_attr_t attr;
 	pthread_t th;
-	
+		
 	
 	if(argc != 2){
 		printf("Usage : numPort\n");
@@ -109,6 +187,8 @@ int main(int argc, char **args){
         printf("could not start timer\n");
         exit(1);
     }
+    
+    grille = generer_grille();
 	
 	while(1){
 		
@@ -127,12 +207,16 @@ int main(int argc, char **args){
 			if(FD_ISSET(fds[i], &lecteurs)){
 				
 				if(i==0){
-					printf("ICI CONNEXION !\n");
+					
 					if( (connexion = accept(fds[0], (struct sockaddr *) &exp, &fromlen))==-1){
 						perror("accept");
 						return EXIT_FAILURE;
 					}
-					if(pthread_create(&th, &attr, traitement, &connexion)!=0){
+					
+					pconnexion = malloc(sizeof(int));
+					pconnexion[0] = connexion;
+					
+					if(pthread_create(&th, &attr, traitement, pconnexion)!=0){
 						printf("pthread_create\n");
 						shutdown(connexion, 2);
 						return EXIT_FAILURE;
@@ -154,6 +238,8 @@ int main(int argc, char **args){
 		
 	
 	}
+	
+	detruire_grille(grille);
 	
 	
 	pthread_attr_destroy(&attr);
