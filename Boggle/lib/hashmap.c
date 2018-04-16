@@ -10,6 +10,7 @@
 #define INITIAL_SIZE (256)
 #define MAX_CHAIN_LENGTH (8)
 
+
 /* We need to keep keys and values */
 typedef struct _hashmap_element{
 	char* key;
@@ -343,6 +344,50 @@ int hashmap_iterate(map_t in, PFany f, any_t item) {
 		}
 
     return MAP_OK;
+}
+
+
+
+List_keys * hashmap_get_keys(map_t in){
+	
+	int i;
+	List_keys *lcurrent, *l;
+
+	/* Cast the hashmap */
+	hashmap_map* m = (hashmap_map*) in;
+
+	l = NULL;
+
+	/* On empty hashmap, return immediately */
+	if (hashmap_length(m) <= 0)
+		return NULL;	
+
+	/* Linear probing */
+	for(i = 0; i< m->table_size; i++)
+		if(m->data[i].in_use != 0) {
+			lcurrent = malloc(sizeof(struct _list_keys));
+			lcurrent->key = m->data[i].key;
+			lcurrent->next = l;
+			l = lcurrent;
+		}
+
+    return l;
+	
+	
+}
+
+
+void list_keys_free(List_keys *l){
+	
+	List_keys *lnext;
+	
+	while(l){
+		lnext = l->next;
+		free(l);
+		l = lnext;
+	}
+	
+	
 }
 
 /*

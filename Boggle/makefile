@@ -14,7 +14,7 @@ INCLUDE=$(DIR)/include/
 LIB=$(DIR)/lib/
 SRC=$(DIR)/src/
 
-HC=include/grille.h
+HC=include/grille.h include/hashmap.h
 
 
 .SUFFIXES:
@@ -29,12 +29,12 @@ test: test-serveur
 #	-$$PWD/bin/ftp_multi_serveur 2000 /tmp &
 
 test-serveur: $(BIN)serveur
-	-$$PWD/bin/serveur 2005
+	-$$PWD/bin/serveur 2006
 	
 test-client: $(BIN)client
-	-$$PWD/bin/client 127.0.0.1 2005
+	-$$PWD/bin/client 127.0.0.1 2006
 	
-$(BIN)serveur: $(OBJ)serveur.o $(OBJ)grille.o
+$(BIN)serveur: $(OBJ)serveur.o $(OBJ)grille.o $(OBJ)hashmap.o
 	@if [ -d $(BIN) ]; then : ; else mkdir $(BIN); fi
 	$(CC) -o $@ $^ $(LDFLAGS)
 

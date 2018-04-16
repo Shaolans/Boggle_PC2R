@@ -29,12 +29,13 @@ char tirer_lettre(char *mot){
 
 char * generer_grille(){
 	
-	srand(time(NULL));
+	
 	
 	char *grille;
 	int presents[16]= {0};
-	char c;
 	int i,j,k;
+	
+	srand(time(NULL));
 
 	grille = malloc(sizeof(char*)*16);
 	

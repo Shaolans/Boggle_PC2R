@@ -23,7 +23,37 @@
 
 #define MAX_ARG 3
 
+
+typedef struct info_t {
+	
+	char * userName;
+	int score;
+	
+}Info;
+
 char * grille;
+map_t map ;
+pthread_mutex_t mutex_map;
+
+
+void envoyer_messages_autres_users(map_t map, char* message, int taille){
+	
+	List_keys *keys, *pkeys;
+	int connexion;
+	
+	keys = hashmap_get_keys(map);
+			
+	pkeys = keys;
+	while(pkeys){
+		connexion=atoi(pkeys->key);
+		send(connexion, message, taille, 0);
+		pkeys = pkeys ->next;
+	}
+		
+	list_keys_free(keys);
+	
+}
+
 
 
 void * traitement(void *arg){
@@ -35,14 +65,18 @@ void * traitement(void *arg){
 	char message[100];
 	char *userName = malloc(sizeof(char)*20);
 	int nb_req=0;
+	Info info;
 	
 	int connexion = *(int *)arg;
-	
+	char conn[6];
+
 	while(nb_req < 2){
 		i=0;
+		sprintf(buffer, "\r\n");
 		recv(connexion, buffer, sizeof(buffer), 0);
 		
 		printf(buffer);
+		printf("%d\n", connexion);
 		
 		parse = strtok(buffer, "/");
 		
@@ -62,17 +96,29 @@ void * traitement(void *arg){
 		if(strcmp(argv[0], "CONNEXION")==0){
 			memcpy(userName, argv[1], sizeof(argv[1]));
 			
+			sprintf(message, "CONNECTE/%s/\r\n",userName);
+			pthread_mutex_lock(&mutex_map);
+			envoyer_messages_autres_users(map, message, sizeof(message));
 			
 			
-			sprintf(message, "BIENVENUE/%s/\n\r",grille);
+			info.userName = userName;
+			info.score = 0;
+			sprintf(conn, "%d", connexion);
+			
+			
+			hashmap_put(map, conn, &info);
+			pthread_mutex_unlock(&mutex_map);
+			sprintf(message, "BIENVENUE/%s/\r\n",grille);
 			
 			send(connexion, message, sizeof(message), 0);
+			
+			
 		}
 		else{
 			if(strcmp(argv[0], "SORT")==0){
 				
 				/*Ce n'est pas ca : il faut l'envoyer aux autres clients*/
-				sprintf(message, "DECONNEXION/%s/\n\r", userName);
+				sprintf(message, "DECONNEXION/%s/\r\n", userName);
 				
 				send(connexion, message, sizeof(message), 0);
 				break;
@@ -82,7 +128,7 @@ void * traitement(void *arg){
 					
 				}
 				else{
-					printf("Requete recue de format inconnu");
+					printf("Requete recue de format inconnu\n");
 					
 				}
 				
@@ -178,9 +224,9 @@ int main(int argc, char **args){
 		
 	max1++;
 	
-	timerValue.it_value.tv_sec = 120;
+	timerValue.it_value.tv_sec = 5;
     timerValue.it_value.tv_nsec = 0;
-    timerValue.it_interval.tv_sec = 120;
+    timerValue.it_interval.tv_sec = 5;
     timerValue.it_interval.tv_nsec = 0;
     
     if (timerfd_settime(fds[1], 0, &timerValue, NULL) < 0) {
@@ -189,6 +235,7 @@ int main(int argc, char **args){
     }
     
     grille = generer_grille();
+    map = hashmap_new();
 	
 	while(1){
 		
@@ -200,7 +247,7 @@ int main(int argc, char **args){
 		}
 		
 		if(FD_ISSET(0, &lecteurs))
-			break;
+			break; 
 		
 		for(i=0; i<2; i++){
 			
@@ -240,6 +287,7 @@ int main(int argc, char **args){
 	}
 	
 	detruire_grille(grille);
+	hashmap_free(map);
 	
 	
 	pthread_attr_destroy(&attr);

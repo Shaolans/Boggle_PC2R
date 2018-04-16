@@ -55,7 +55,7 @@ int main(int argc, char *argv[])
     
 	/*sprintf(req,"POST /definition.php HTTP/1.1\r\nHost: le-dictionnaire.com\r\nConnection: Close\r\nContent-type: application/x-www-form-urlencoded\r\nContent-Length: %d\r\n\r\n%s\r\n",strlen(var),var);
     */
-    sprintf(req, "CONNEXION/%s/\n\r\r\n", userName); 
+    sprintf(req, "CONNEXION/%s/\r\n\r\n", userName); 
         
     
     if(send(sock, req, strlen(req), 0)==-1){
@@ -67,18 +67,19 @@ int main(int argc, char *argv[])
 	
 	printf(buffer);
 	
-	 sprintf(req, "SORT/%s/\n\r\n\r", userName); 
+	 sprintf(req, "SORT/%s/\r\n\r\n", userName); 
         
     
-    if(send(sock, req, strlen(req), 0)==-1){
+    /*if(send(sock, req, strlen(req), 0)==-1){
 		printf("PB SEND\n");
-	}
+	}*/
 	if(recv(sock, buffer, sizeof(buffer), 0)==-1){
 		printf("PB RECV");
 	}
 	
 	
 	printf(buffer);
+	
 	
     /* Fermer la connexion */
     shutdown(sock,2);

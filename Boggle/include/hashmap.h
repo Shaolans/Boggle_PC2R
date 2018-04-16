@@ -33,6 +33,13 @@ typedef int (*PFany)(any_t, any_t);
  */
 typedef any_t map_t;
 
+
+typedef struct _list_keys{
+	char *key;
+	struct _list_keys * next;
+	
+}List_keys;
+
 /*
  * Return an empty hashmap. Returns NULL if empty.
 */
@@ -77,5 +84,9 @@ extern void hashmap_free(map_t in);
  * Get the current size of a hashmap
  */
 extern int hashmap_length(map_t in);
+
+extern List_keys * hashmap_get_keys(map_t in);
+
+void list_keys_free(List_keys *l);
 
 #endif __HASHMAP_H__
