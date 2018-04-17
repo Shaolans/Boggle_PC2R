@@ -22,6 +22,8 @@
 
 
 #define MAX_ARG 3
+#define MAX_TOURS 2
+#define MAX_TAILLE_MSG 10000
 
 
 typedef struct info_t {
@@ -36,7 +38,7 @@ map_t map ;
 pthread_mutex_t mutex_map;
 
 
-void envoyer_messages_autres_users(map_t map, char* message, int taille){
+void envoyer_messages_users(map_t map, char* message, int taille){
 	
 	List_keys *keys, *pkeys;
 	int connexion;
@@ -46,7 +48,10 @@ void envoyer_messages_autres_users(map_t map, char* message, int taille){
 	pkeys = keys;
 	while(pkeys){
 		connexion=atoi(pkeys->key);
-		send(connexion, message, taille, 0);
+		if(send(connexion, message, taille, 0)==-1){
+			perror("send");
+			return EXIT_FAILURE;			
+		}
 		pkeys = pkeys ->next;
 	}
 		
@@ -55,17 +60,61 @@ void envoyer_messages_autres_users(map_t map, char* message, int taille){
 }
 
 
+char * scores_actuels(map_t map){
+	
+	
+	List_keys *keys, *pkeys;
+	Info *pinfo;
+	char *scores;
+	int taille;
+	char scoreJoueur[10];
+	
+	keys = hashmap_get_keys(map);
+	
+	scores = malloc(sizeof(char)*100);
+	
+	sprintf(scores, "%d*", MAX_TOURS);
+			
+	pkeys = keys;
+	while(pkeys){
+		
+		hashmap_get(map, pkeys->key, &pinfo);
+		
+		sprintf(scoreJoueur, "%d", pinfo->score);
+		
+		taille = sizeof(scores)+sizeof(pinfo->userName)+sizeof(scoreJoueur)+2;
+		
+		memcpy(scores, scores, taille);
+		strcat(scores, pinfo->userName);
+		strcat(scores, "*");
+		strcat(scores, scoreJoueur);
+		strcat(scores, "*");
+		pkeys = pkeys ->next;
+	}
+		
+	list_keys_free(keys);
+	
+	return scores;
+	
+	
+}
+
+
 
 void * traitement(void *arg){
 	
-	char buffer[100];
+	char buffer[MAX_TAILLE_MSG];
 	char *parse;
 	char argv[MAX_ARG][20];
 	int i = 0;
-	char message[100];
+	int k;
+	char message[MAX_TAILLE_MSG];
 	char *userName = malloc(sizeof(char)*20);
 	int nb_req=0;
 	Info info;
+	char *scores;
+	char * parseTrouve;
+	char argTrouve[3][32];
 	
 	int connexion = *(int *)arg;
 	char conn[6];
@@ -73,7 +122,11 @@ void * traitement(void *arg){
 	while(nb_req < 2){
 		i=0;
 		sprintf(buffer, "\r\n");
-		recv(connexion, buffer, sizeof(buffer), 0);
+		
+		if(recv(connexion, buffer, sizeof(buffer), 0)==-1){
+			perror("recv");
+			exit(1);
+		}
 		
 		printf(buffer);
 		printf("%d\n", connexion);
@@ -97,8 +150,9 @@ void * traitement(void *arg){
 			memcpy(userName, argv[1], sizeof(argv[1]));
 			
 			sprintf(message, "CONNECTE/%s/\r\n",userName);
+			
 			pthread_mutex_lock(&mutex_map);
-			envoyer_messages_autres_users(map, message, sizeof(message));
+			envoyer_messages_users(map, message, sizeof(message));
 			
 			
 			info.userName = userName;
@@ -107,25 +161,59 @@ void * traitement(void *arg){
 			
 			
 			hashmap_put(map, conn, &info);
-			pthread_mutex_unlock(&mutex_map);
-			sprintf(message, "BIENVENUE/%s/\r\n",grille);
 			
-			send(connexion, message, sizeof(message), 0);
+			scores = scores_actuels(map);
+			
+			pthread_mutex_unlock(&mutex_map);
+			
+			sprintf(message, "BIENVENUE/%s/%s/\r\n",grille, scores);
+			
+			if(send(connexion, message, sizeof(message), 0)==-1){
+				perror("send");
+				exit(1);
+			}
+						
+			free(scores);
 			
 			
 		}
 		else{
 			if(strcmp(argv[0], "SORT")==0){
 				
-				/*Ce n'est pas ca : il faut l'envoyer aux autres clients*/
+				
 				sprintf(message, "DECONNEXION/%s/\r\n", userName);
 				
-				send(connexion, message, sizeof(message), 0);
+				pthread_mutex_lock(&mutex_map);
+				hashmap_remove(map, conn);
+				
+				envoyer_messages_users(map, message, sizeof(message));
+				
+				pthread_mutex_unlock(&mutex_map);
 				break;
 			}
 			else{
 				if(strcmp(argv[0], "TROUVE")==0){
+					/*ANALYSE du mot trouve  */
 					
+					k=0;
+					
+					parseTrouve = strtok(buffer, "/");
+					while(parseTrouve){
+						
+						if(k>=3)
+							break;
+						
+						strcpy(argTrouve[k]	, parseTrouve);
+								
+						k++;
+						
+						parseTrouve = strtok(NULL, "/");
+			
+					}
+					printf("ICI\n");
+					printf("%s %s\n", argTrouve[1], argTrouve[2]);
+					
+					/* envoie de MVALIDE OU MINVALIDE */
 				}
 				else{
 					printf("Requete recue de format inconnu\n");
@@ -169,6 +257,8 @@ int main(int argc, char **args){
 	int timersElapsed ;
 	pthread_attr_t attr;
 	pthread_t th;
+	char message[100];
+	int nb_tours=-1;
 		
 	
 	if(argc != 2){
@@ -224,9 +314,9 @@ int main(int argc, char **args){
 		
 	max1++;
 	
-	timerValue.it_value.tv_sec = 5;
+	timerValue.it_value.tv_sec = 10;
     timerValue.it_value.tv_nsec = 0;
-    timerValue.it_interval.tv_sec = 5;
+    timerValue.it_interval.tv_sec = 10;
     timerValue.it_interval.tv_nsec = 0;
     
     if (timerfd_settime(fds[1], 0, &timerValue, NULL) < 0) {
@@ -271,10 +361,69 @@ int main(int argc, char **args){
 					
 				}
 				else{
-					printf("ICI TEMPS !\n");
+					
+					
+					if(nb_tours == -1){
+						
+						sprintf(message, "SESSION/\r\n");
+						pthread_mutex_lock(&mutex_map);
+						envoyer_messages_users(map, message, sizeof(message));
+						pthread_mutex_unlock(&mutex_map);
+						timerValue.it_value.tv_sec = 2;
+						timerValue.it_interval.tv_sec = 2;
+						
+						sprintf(message, "TOUR/%s/\r\n", grille);
+						pthread_mutex_lock(&mutex_map);
+						envoyer_messages_users(map, message, sizeof(message));
+						pthread_mutex_unlock(&mutex_map);
+						
+						if (timerfd_settime(fds[1], 0, &timerValue, NULL) < 0) {
+							printf("could not start timer\n");
+							exit(1);
+						}
+						
+						
+					}
+					else{
+						if(nb_tours == MAX_TOURS){
+							/* Phase de resultats */
+							
+							timerValue.it_value.tv_sec = 10;
+							timerValue.it_interval.tv_sec = 10;
+						
+						
+							if (timerfd_settime(fds[1], 0, &timerValue, NULL) < 0) {
+								printf("could not start timer\n");
+								exit(1);
+							}
+							
+							
+							nb_tours = -2;
+						}
+						else{
+							/* Fin de la phase de recherche */
+							
+							sprintf(message, "RFIN/\r\n");
+							pthread_mutex_lock(&mutex_map);
+							envoyer_messages_users(map, message, sizeof(message));
+							pthread_mutex_unlock(&mutex_map);
+							
+							detruire_grille(grille);
+							grille = generer_grille();
+							
+							
+						}
+					}
+					
+					nb_tours++;
+					
 					timersElapsed = 0;
 					(void) read(fds[1], &timersElapsed, 8);
 					printf("timers elapsed: %d\n", timersElapsed);
+					
+					
+					
+				
 						
 				}
 				

@@ -13,7 +13,7 @@
 #include <netdb.h>
 #include <string.h>
 
-#define MAX_FILE_NET_SIZE 100
+#define MAX_FILE_NET_SIZE 10000
 
 int main(int argc, char *argv[])
 {
@@ -21,7 +21,6 @@ int main(int argc, char *argv[])
     struct hostent *hp; 
     int sock;
     char req[2048];
-	char var[]="mot=salut";
 	char buffer[MAX_FILE_NET_SIZE];
 	char userName[16] = "Amelito";
 
@@ -55,7 +54,7 @@ int main(int argc, char *argv[])
     
 	/*sprintf(req,"POST /definition.php HTTP/1.1\r\nHost: le-dictionnaire.com\r\nConnection: Close\r\nContent-type: application/x-www-form-urlencoded\r\nContent-Length: %d\r\n\r\n%s\r\n",strlen(var),var);
     */
-    sprintf(req, "CONNEXION/%s/\r\n\r\n", userName); 
+    sprintf(req, "CONNEXION/%s/\r\n", userName); 
         
     
     if(send(sock, req, strlen(req), 0)==-1){
@@ -67,18 +66,40 @@ int main(int argc, char *argv[])
 	
 	printf(buffer);
 	
-	 sprintf(req, "SORT/%s/\r\n\r\n", userName); 
-        
+	 sprintf(req, "SORT/%s/\r\n", userName); 
     
+    
+       
     /*if(send(sock, req, strlen(req), 0)==-1){
 		printf("PB SEND\n");
 	}*/
-	if(recv(sock, buffer, sizeof(buffer), 0)==-1){
-		printf("PB RECV");
-	}
 	
+	int i=0;
+			
+		if(recv(sock, buffer, sizeof(buffer), 0)==-1){
+			printf("PB RECV");
+		}
+		
+		printf(buffer);
+		i++;
+		
+				
+		sprintf(req, "TROUVE/salut/beaute/\r\n"); 
+		if(send(sock, req, strlen(req), 0)==-1){
+			printf("PB SEND\n");
+		}
+		
+		 sprintf(req, "SORT/%s/\r\n", userName); 
+		
+		
+		   
+		if(send(sock, req, strlen(req), 0)==-1){
+			printf("PB SEND\n");
+		}
 	
-	printf(buffer);
+		
+
+	
 	
 	
     /* Fermer la connexion */
