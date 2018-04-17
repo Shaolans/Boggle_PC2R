@@ -7,8 +7,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.Socket;
 import java.net.UnknownHostException;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Optional;
 
 import boggle.client.tools.ConnectInfo;
@@ -25,6 +23,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.Separator;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
@@ -33,6 +32,7 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Font;
 import javafx.stage.Stage;
 
 public class BoggleWindow {
@@ -42,11 +42,24 @@ public class BoggleWindow {
 	private String username;
 	private boolean sayAll;
 	private GridPane grid;
-	private Map<String, ImageView> img_database;
-	private static final char letters[] = {'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'};
 	private GameRunner gr;
 	private TextArea chatcontent;
+	private TextArea system;
+	private final TextField combinaison;
+	private TextField word;
 	
+	public TextField getWord() {
+		return word;
+	}
+
+	public void setWord(TextField word) {
+		this.word = word;
+	}
+
+	public TextField getCombinaison() {
+		return combinaison;
+	}
+
 	public BoggleWindow(Stage stage) {
 		username = "";
 		in = null;
@@ -55,14 +68,8 @@ public class BoggleWindow {
 		sayAll = true;
 		
 		stage.getIcons().add(new Image("file:icons/boggle_icon.jpg"));
-		img_database = new HashMap<>();
+
 		
-		for(char l: letters) {
-			ImageView img = new ImageView("file:letters_img/"+l+".jpg");
-			img.setFitWidth(75);
-			img.setFitHeight(75);
-			img_database.put(l+"", img);
-		}
 		
 		stage.setTitle("Boggle Game");
 		VBox vbox = new VBox();
@@ -81,6 +88,7 @@ public class BoggleWindow {
 					socket = new Socket(info.getServer(), info.getPort());
 					in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 					out = new DataOutputStream(socket.getOutputStream());
+					out.writeChars("CONNEXION/"+info.getUser()+"/\n");
 					if(gr != null) gr.interrupt();
 					gr = new GameRunner(this);
 					gr.start();
@@ -98,7 +106,9 @@ public class BoggleWindow {
 			try {
 				
 				out.writeChars("SORT/"+username+"/\n");
+				system.setText(system.getText()+"Déconnexion de "+username+"\n");
 				if(gr != null) gr.interrupt();
+				gr = null;
 				username = "";
 				in.close();
 				out.close();
@@ -142,10 +152,10 @@ public class BoggleWindow {
 				try {
 					if(sayAll) {
 						chatcontent.setText(chatcontent.getText()+username+": "+chattext.getText()+"\n");
-						out.writeChars("ENVOI/"+chattext.getText()+"\n");	
+						out.writeChars("ENVOI/"+chattext.getText()+"/\n");	
 					}else {
 						chatcontent.setText(chatcontent.getText()+"("+username+" -> "+receiver.getText()+"): "+chattext.getText()+"\n");
-						out.writeChars("PENVOI/"+receiver.getText()+"/"+chattext.getText()+"\n");
+						out.writeChars("PENVOI/"+receiver.getText()+"/"+chattext.getText()+"/\n");
 						
 					}
 					chattext.clear();
@@ -183,14 +193,15 @@ public class BoggleWindow {
 		init_grid(grid);
 		
 		VBox game = new VBox();
-		final TextField combinaison = new TextField();
-		TextField word = new TextField();
+		combinaison = new TextField();
+		word = new TextField();
 		word.setPromptText("Envoyer une réponse");
 		word.setOnKeyPressed(e->{
 			if(e.getCode()==KeyCode.ENTER) {
 				if(!word.getText().equals("") && !combinaison.getText().equals("")) {
 					try {
-						out.writeChars("TROUVE/"+word.getText()+"/"+combinaison.getText()+"\n");
+						out.writeChars("TROUVE/"+word.getText()+"/"+combinaison.getText()+"/\n");
+						system.setText(system.getText()+"Envoi de la réponse: "+word.getText()+" "+combinaison.getText()+"\n");
 						word.clear();
 						combinaison.clear();
 					} catch (IOException e1) {
@@ -207,7 +218,8 @@ public class BoggleWindow {
 			if(e.getCode()==KeyCode.ENTER) {
 				if(!word.getText().equals("") && !combinaison.getText().equals("")) {
 					try {
-						out.writeChars("TROUVE/"+word.getText()+"/"+combinaison.getText()+"\n");
+						out.writeChars("TROUVE/"+word.getText()+"/"+combinaison.getText()+"/\n");
+						system.setText(system.getText()+"Envoi de la réponse: "+word.getText()+" "+combinaison.getText()+"\n");
 						word.clear();
 						combinaison.clear();
 					} catch (IOException e1) {
@@ -218,13 +230,22 @@ public class BoggleWindow {
 			}
 		});
 		
+		system = new TextArea();
+		system.setEditable(false);
 		
+		Label tmpg = new Label("Grille");
+		tmpg.setFont(new Font(25));
+		Label tmps = new Label("Système");
+		tmps.setFont(new Font(15));
+		Label tmpr = new Label("Réponse");
+		tmpr.setFont(new Font(15));
+		game.getChildren().addAll(tmpg, new Separator(), grid, new Separator(), tmps, system, tmpr, word, combinaison);
 		
-		game.getChildren().addAll(grid, word, combinaison);
 		hbox.getChildren().addAll(chat, game);
 		vbox.getChildren().addAll(mb, hbox);
 		stage.setScene(new Scene(vbox));
 		stage.show();
+		
 	}
 	
 	public Socket getSocket() {
@@ -275,14 +296,14 @@ public class BoggleWindow {
 		this.grid = grid;
 	}
 
-	public Map<String, ImageView> getImg_database() {
-		return img_database;
+	public TextArea getSystem() {
+		return system;
 	}
 
-	public void setImg_database(Map<String, ImageView> img_database) {
-		this.img_database = img_database;
+	public void setSystem(TextArea system) {
+		this.system = system;
 	}
-
+	
 	public GameRunner getGr() {
 		return gr;
 	}
@@ -299,9 +320,7 @@ public class BoggleWindow {
 		this.chatcontent = chatcontent;
 	}
 
-	public static char[] getLetters() {
-		return letters;
-	}
+
 
 	//Creation du popup de connexion
 	public static Dialog<ConnectInfo> initConnectServer(){
@@ -396,6 +415,22 @@ public class BoggleWindow {
 		img.setFitWidth(75);
 		img.setFitHeight(55);
 		grid.add(img, 4, 0);
+		
+	}
+	
+	public void commandLineConnect(String address, int port) {
+		try {
+			socket = new Socket(address, port);
+			in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+			out = new DataOutputStream(socket.getOutputStream());
+			out.writeChars("CONNEXION/UserTest/\n");
+			username = "UserTest";
+			if(gr != null) gr.interrupt();
+			gr = new GameRunner(this);
+			gr.start();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 		
 	}
 	
