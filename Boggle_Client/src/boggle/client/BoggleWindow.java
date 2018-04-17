@@ -125,7 +125,7 @@ public class BoggleWindow {
 			try {
 				
 				out.writeChars("SORT/"+username+"/\r\n");
-				system.setText(system.getText()+"Déconnexion de "+username+"\n");
+				system.appendText("Déconnexion de "+username+"\n");
 				if(gr != null) gr.interrupt();
 				gr = null;
 				username = "";
@@ -170,10 +170,10 @@ public class BoggleWindow {
 			if(e.getCode()==KeyCode.ENTER) {
 				try {
 					if(sayAll) {
-						chatcontent.setText(chatcontent.getText()+username+": "+chattext.getText()+"\n");
+						chatcontent.appendText(username+": "+chattext.getText()+"\n");
 						out.writeChars("ENVOI/"+chattext.getText()+"/\r\n");	
 					}else {
-						chatcontent.setText(chatcontent.getText()+"("+username+" -> "+receiver.getText()+"): "+chattext.getText()+"\n");
+						chatcontent.appendText("("+username+" -> "+receiver.getText()+"): "+chattext.getText()+"\n");
 						out.writeChars("PENVOI/"+receiver.getText()+"/"+chattext.getText()+"/\r\n");
 						
 					}
@@ -222,7 +222,7 @@ public class BoggleWindow {
 				if(!word.getText().equals("") && !combinaison.getText().equals("")) {
 					try {
 						out.writeChars("TROUVE/"+word.getText()+"/"+combinaison.getText()+"/\r\n");
-						system.setText(system.getText()+"Envoi de la réponse:\n"+"MOT: "+word.getText()+" TRAJECTOIRE: "+combinaison.getText()+"\n");
+						system.appendText("Envoi de la réponse:\n"+"MOT: "+word.getText()+" TRAJECTOIRE: "+combinaison.getText()+"\n");
 						word.clear();
 						combinaison.clear();
 						clearFramesSelection();
@@ -241,7 +241,7 @@ public class BoggleWindow {
 				if(!word.getText().equals("") && !combinaison.getText().equals("")) {
 					try {
 						out.writeChars("TROUVE/"+word.getText()+"/"+combinaison.getText()+"/\r\n");
-						system.setText(system.getText()+"Envoi de la réponse:\n"+"MOT: "+word.getText()+" TRAJECTOIRE: "+combinaison.getText()+"\n");
+						system.appendText("Envoi de la réponse:\n"+"MOT: "+word.getText()+" TRAJECTOIRE: "+combinaison.getText()+"\n");
 						word.clear();
 						combinaison.clear();
 						clearFramesSelection();
@@ -276,7 +276,7 @@ public class BoggleWindow {
 		validatepath.setOnAction(e->{
 			try {
 				out.writeChars("TROUVE/"+word.getText()+"/"+combinaison.getText()+"/\r\n");
-				system.setText(system.getText()+"Envoi de la réponse:\n"+"MOT: "+word.getText()+" TRAJECTOIRE: "+combinaison.getText()+"\n");
+				system.appendText("Envoi de la réponse:\n"+"MOT: "+word.getText()+" TRAJECTOIRE: "+combinaison.getText()+"\n");
 				word.clear();
 				combinaison.clear();
 				clearFramesSelection();
@@ -302,7 +302,7 @@ public class BoggleWindow {
 		validateanswer.setOnAction(e->{
 			try {
 				out.writeChars("TROUVE/"+word.getText()+"/"+combinaison.getText()+"/\r\n");
-				system.setText(system.getText()+"Envoi de la réponse:\n"+"MOT: "+word.getText()+" TRAJECTOIRE: "+combinaison.getText()+"\n");
+				system.appendText("Envoi de la réponse:\n"+"MOT: "+word.getText()+" TRAJECTOIRE: "+combinaison.getText()+"\n");
 				word.clear();
 				combinaison.clear();
 				clearFramesSelection();
