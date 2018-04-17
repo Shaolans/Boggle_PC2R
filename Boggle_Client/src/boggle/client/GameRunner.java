@@ -3,8 +3,8 @@ package boggle.client;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.Map;
 
+import boggle.client.tools.AnswerStack;
 import boggle.client.tools.Frame;
 import boggle.client.tools.UpdateGrid;
 import javafx.application.Platform;
@@ -15,6 +15,7 @@ public class GameRunner extends Thread {
 	private BoggleWindow bw;
 	private BufferedReader in;
 	private Frame[][] frames;
+	private AnswerStack as;
 	
 	public GameRunner(BoggleWindow bw) {
 		this.bw = bw;
@@ -24,12 +25,15 @@ public class GameRunner extends Thread {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		frames = new Frame[4][4];
+		frames = bw.getFrames();
+		as = bw.getAs();
 	}
 	
 	@Override
 	public void run() {
 		try {
+			ImageView img;
+			ImageView img_s;
 			while(!isInterrupted()) {
 				String command;
 				command = in.readLine();
@@ -38,9 +42,17 @@ public class GameRunner extends Thread {
 				case "BIENVENUE":
 					GridPane gpb = bw.getGrid();
 					for(int i = 0; i < 16; i++) {
-						frames[i%4][i/4] = new Frame(i%4, i/4, info[1].charAt(i));
+						img = new ImageView("file:letters_img/"+info[1].charAt(i)+".jpg");
+						img.setFitWidth(75);
+						img.setFitHeight(75);
+						img.setId(((i%4)+1)+" "+((i/4)+1)+" n");
+						img_s = new ImageView("file:letters_img/"+info[1].charAt(i)+"_s.jpg");
+						img_s.setFitWidth(75);
+						img_s.setFitHeight(75);
+						img_s.setId(((i%4)+1)+" "+((i/4)+1)+" s");
+						frames[i%4][i/4] = new Frame(i%4, i/4, info[1].charAt(i), img, img_s);
 					}
-					Platform.runLater(new UpdateGrid(gpb, frames));
+					Platform.runLater(new UpdateGrid(gpb, frames, as));
 					bw.getCombinaison().setDisable(false);
 					bw.getWord().setDisable(false);
 					
@@ -52,11 +64,11 @@ public class GameRunner extends Thread {
 					
 					break;
 				case "CONNECTE":
-					bw.getChatcontent().setText(bw.getChatcontent().getText()+"[Système]"+info[1]+" vient de se connecter.\n");
+					bw.getChatcontent().setText(bw.getChatcontent().getText()+"[Système] "+info[1]+" vient de se connecter.\n");
 					bw.getSystem().setText(bw.getSystem().getText()+info[1]+" vient de se connecter.\n");
 					break;
 				case "DECONNEXION":
-					bw.getChatcontent().setText(bw.getChatcontent().getText()+"[Système]"+info[1]+" vient de se déconnecter.\n");
+					bw.getChatcontent().setText(bw.getChatcontent().getText()+"[Système] "+info[1]+" vient de se déconnecter.\n");
 					bw.getSystem().setText(bw.getSystem().getText()+info[1]+" vient de se déconnecter.\n");
 					break;
 				case "SESSION":
@@ -72,9 +84,17 @@ public class GameRunner extends Thread {
 				case "TOUR":
 					GridPane gp = bw.getGrid();
 					for(int i = 0; i < 16; i++) {
-						frames[i%4][i/4] = new Frame(i%4, i/4, info[1].charAt(i));
+						img = new ImageView("file:letters_img/"+info[1].charAt(i)+".jpg");
+						img.setFitWidth(75);
+						img.setFitHeight(75);
+						img.setId(((i%4)+1)+" "+((i/4)+1)+" n");
+						img_s = new ImageView("file:letters_img/"+info[1].charAt(i)+"_s.jpg");
+						img_s.setFitWidth(75);
+						img_s.setFitHeight(75);
+						img_s.setId(((i%4)+1)+" "+((i/4)+1)+" s");
+						frames[i%4][i/4] = new Frame(i%4, i/4, info[1].charAt(i), img, img_s);
 					}
-					Platform.runLater(new UpdateGrid(gp, frames));
+					Platform.runLater(new UpdateGrid(gp, frames, as));
 					bw.getCombinaison().setDisable(false);
 					bw.getWord().setDisable(false);
 					bw.getSystem().setText(bw.getSystem().getText()+"Tour suivant\n");

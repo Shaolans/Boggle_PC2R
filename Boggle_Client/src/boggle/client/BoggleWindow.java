@@ -7,14 +7,20 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
+import boggle.client.tools.AnswerStack;
 import boggle.client.tools.ConnectInfo;
+import boggle.client.tools.Frame;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
+import javafx.scene.Node;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
 import javafx.scene.control.ButtonBar.ButtonData;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ChoiceBox;
@@ -45,11 +51,22 @@ public class BoggleWindow {
 	private GameRunner gr;
 	private TextArea chatcontent;
 	private TextArea system;
-	private final TextField combinaison;
+	private TextField combinaison;
 	private TextField word;
+	private AnswerStack as;
+	private Frame[][] frames;
+	
 	
 	public TextField getWord() {
 		return word;
+	}
+
+	public Frame[][] getFrames() {
+		return frames;
+	}
+
+	public void setFrames(Frame[][] frames) {
+		this.frames = frames;
 	}
 
 	public void setWord(TextField word) {
@@ -66,6 +83,8 @@ public class BoggleWindow {
 		out = null;
 		socket = null;
 		sayAll = true;
+		as = new AnswerStack(this);
+		frames = new Frame[4][4];
 		
 		stage.getIcons().add(new Image("file:icons/boggle_icon.jpg"));
 
@@ -88,7 +107,7 @@ public class BoggleWindow {
 					socket = new Socket(info.getServer(), info.getPort());
 					in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 					out = new DataOutputStream(socket.getOutputStream());
-					out.writeChars("CONNEXION/"+info.getUser()+"/\n");
+					out.writeChars("CONNEXION/"+info.getUser()+"/\r\n");
 					if(gr != null) gr.interrupt();
 					gr = new GameRunner(this);
 					gr.start();
@@ -105,7 +124,7 @@ public class BoggleWindow {
 		disconnect.setOnAction(e->{
 			try {
 				
-				out.writeChars("SORT/"+username+"/\n");
+				out.writeChars("SORT/"+username+"/\r\n");
 				system.setText(system.getText()+"Déconnexion de "+username+"\n");
 				if(gr != null) gr.interrupt();
 				gr = null;
@@ -152,10 +171,10 @@ public class BoggleWindow {
 				try {
 					if(sayAll) {
 						chatcontent.setText(chatcontent.getText()+username+": "+chattext.getText()+"\n");
-						out.writeChars("ENVOI/"+chattext.getText()+"/\n");	
+						out.writeChars("ENVOI/"+chattext.getText()+"/\r\n");	
 					}else {
 						chatcontent.setText(chatcontent.getText()+"("+username+" -> "+receiver.getText()+"): "+chattext.getText()+"\n");
-						out.writeChars("PENVOI/"+receiver.getText()+"/"+chattext.getText()+"/\n");
+						out.writeChars("PENVOI/"+receiver.getText()+"/"+chattext.getText()+"/\r\n");
 						
 					}
 					chattext.clear();
@@ -194,16 +213,19 @@ public class BoggleWindow {
 		
 		VBox game = new VBox();
 		combinaison = new TextField();
+		combinaison.setMinWidth(300);
 		word = new TextField();
+		word.setMinWidth(300);
 		word.setPromptText("Envoyer une réponse");
 		word.setOnKeyPressed(e->{
 			if(e.getCode()==KeyCode.ENTER) {
 				if(!word.getText().equals("") && !combinaison.getText().equals("")) {
 					try {
-						out.writeChars("TROUVE/"+word.getText()+"/"+combinaison.getText()+"/\n");
-						system.setText(system.getText()+"Envoi de la réponse: "+word.getText()+" "+combinaison.getText()+"\n");
+						out.writeChars("TROUVE/"+word.getText()+"/"+combinaison.getText()+"/\r\n");
+						system.setText(system.getText()+"Envoi de la réponse:\n"+"MOT: "+word.getText()+" TRAJECTOIRE: "+combinaison.getText()+"\n");
 						word.clear();
 						combinaison.clear();
+						clearFramesSelection();
 					} catch (IOException e1) {
 						e1.printStackTrace();
 					}
@@ -218,10 +240,11 @@ public class BoggleWindow {
 			if(e.getCode()==KeyCode.ENTER) {
 				if(!word.getText().equals("") && !combinaison.getText().equals("")) {
 					try {
-						out.writeChars("TROUVE/"+word.getText()+"/"+combinaison.getText()+"/\n");
-						system.setText(system.getText()+"Envoi de la réponse: "+word.getText()+" "+combinaison.getText()+"\n");
+						out.writeChars("TROUVE/"+word.getText()+"/"+combinaison.getText()+"/\r\n");
+						system.setText(system.getText()+"Envoi de la réponse:\n"+"MOT: "+word.getText()+" TRAJECTOIRE: "+combinaison.getText()+"\n");
 						word.clear();
 						combinaison.clear();
+						clearFramesSelection();
 					} catch (IOException e1) {
 						e1.printStackTrace();
 					}
@@ -239,7 +262,61 @@ public class BoggleWindow {
 		tmps.setFont(new Font(15));
 		Label tmpr = new Label("Réponse");
 		tmpr.setFont(new Font(15));
-		game.getChildren().addAll(tmpg, new Separator(), grid, new Separator(), tmps, system, tmpr, word, combinaison);
+		
+		Button clearpath = new Button("Effacer");
+		Button validatepath = new Button("Valider");
+		
+		clearpath.setOnAction(e->{
+			clearFramesSelection();
+			as.clear();
+			combinaison.clear();
+			word.clear();
+		});
+		
+		validatepath.setOnAction(e->{
+			try {
+				out.writeChars("TROUVE/"+word.getText()+"/"+combinaison.getText()+"/\r\n");
+				system.setText(system.getText()+"Envoi de la réponse:\n"+"MOT: "+word.getText()+" TRAJECTOIRE: "+combinaison.getText()+"\n");
+				word.clear();
+				combinaison.clear();
+				clearFramesSelection();
+			} catch (IOException e1) {
+				e1.printStackTrace();
+			}
+		});
+		
+		HBox pathbuttons = new HBox();
+		pathbuttons.getChildren().addAll(validatepath, clearpath);
+		
+		GridPane answerbox = new GridPane();
+		Button clearanswer = new Button("Effacer");
+		Button validateanswer = new Button("Valider");
+		
+		clearanswer.setOnAction(e->{
+			clearFramesSelection();
+			as.clear();
+			combinaison.clear();
+			word.clear();
+		});
+		
+		validateanswer.setOnAction(e->{
+			try {
+				out.writeChars("TROUVE/"+word.getText()+"/"+combinaison.getText()+"/\r\n");
+				system.setText(system.getText()+"Envoi de la réponse:\n"+"MOT: "+word.getText()+" TRAJECTOIRE: "+combinaison.getText()+"\n");
+				word.clear();
+				combinaison.clear();
+				clearFramesSelection();
+			} catch (IOException e1) {
+				e1.printStackTrace();
+			}
+		});
+		
+		answerbox.add(word, 0, 0);
+		answerbox.add(combinaison, 0, 1);
+		answerbox.add(clearanswer, 1, 0);
+		answerbox.add(validateanswer, 1, 1);
+		
+		game.getChildren().addAll(tmpg, new Separator(), grid, pathbuttons, new Separator(), tmps, system, tmpr, answerbox);
 		
 		hbox.getChildren().addAll(chat, game);
 		vbox.getChildren().addAll(mb, hbox);
@@ -248,6 +325,18 @@ public class BoggleWindow {
 		
 	}
 	
+	public AnswerStack getAs() {
+		return as;
+	}
+
+	public void setAs(AnswerStack as) {
+		this.as = as;
+	}
+
+	public void setCombinaison(TextField combinaison) {
+		this.combinaison = combinaison;
+	}
+
 	public Socket getSocket() {
 		return socket;
 	}
@@ -416,6 +505,9 @@ public class BoggleWindow {
 		img.setFitHeight(55);
 		grid.add(img, 4, 0);
 		
+		
+		
+		
 	}
 	
 	public void commandLineConnect(String address, int port) {
@@ -423,7 +515,7 @@ public class BoggleWindow {
 			socket = new Socket(address, port);
 			in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 			out = new DataOutputStream(socket.getOutputStream());
-			out.writeChars("CONNEXION/UserTest/\n");
+			out.writeChars("CONNEXION/UserTest/\r\n");
 			username = "UserTest";
 			if(gr != null) gr.interrupt();
 			gr = new GameRunner(this);
@@ -432,6 +524,23 @@ public class BoggleWindow {
 			e.printStackTrace();
 		}
 		
+	}
+	
+	public void clearFramesSelection() {
+
+		for(Frame[] f: frames) {
+			for(Frame fs: f) {
+				grid.getChildren().remove(fs.getImg_selected());
+				grid.getChildren().remove(fs.getImg());
+			}
+		}
+		
+		for(Frame[] f: frames) {
+			for(Frame fs: f) {
+				grid.add(fs.getImg(), fs.getCol()+1, fs.getRow()+1);
+				fs.setSelected(false);
+			}
+		}
 	}
 	
 }
