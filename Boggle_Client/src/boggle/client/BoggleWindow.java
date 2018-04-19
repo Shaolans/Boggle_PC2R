@@ -465,42 +465,42 @@ public class BoggleWindow {
 	public static void init_grid(GridPane grid) {
 		ImageView img;
 		
-		img = new ImageView("file:grid_init\\A.jpg");
+		img = new ImageView("file:grid_init/A.jpg");
 		img.setFitWidth(75);
 		img.setFitHeight(75);
 		grid.add(img, 0, 1);
 		
-		img = new ImageView("file:grid_init\\B.jpg");
+		img = new ImageView("file:grid_init/B.jpg");
 		img.setFitWidth(75);
 		img.setFitHeight(75);
 		grid.add(img, 0, 2);
 		
-		img = new ImageView("file:grid_init\\C.jpg");
+		img = new ImageView("file:grid_init/C.jpg");
 		img.setFitWidth(75);
 		img.setFitHeight(75);
 		grid.add(img, 0, 3);
 		
-		img = new ImageView("file:grid_init\\D.jpg");
+		img = new ImageView("file:grid_init/D.jpg");
 		img.setFitWidth(75);
 		img.setFitHeight(75);
 		grid.add(img, 0, 4);
 		
-		img = new ImageView("file:grid_init\\1.png");
+		img = new ImageView("file:grid_init/1.png");
 		img.setFitWidth(75);
 		img.setFitHeight(55);
 		grid.add(img, 1, 0);
 		
-		img = new ImageView("file:grid_init\\2.png");
+		img = new ImageView("file:grid_init/2.png");
 		img.setFitWidth(75);
 		img.setFitHeight(55);
 		grid.add(img, 2, 0);
 		
-		img = new ImageView("file:grid_init\\3.png");
+		img = new ImageView("file:grid_init/3.png");
 		img.setFitWidth(75);
 		img.setFitHeight(55);
 		grid.add(img, 3, 0);
 		
-		img = new ImageView("file:grid_init\\4.png");
+		img = new ImageView("file:grid_init/4.png");
 		img.setFitWidth(75);
 		img.setFitHeight(55);
 		grid.add(img, 4, 0);
