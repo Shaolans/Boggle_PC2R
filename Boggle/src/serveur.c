@@ -107,14 +107,11 @@ void * traitement(void *arg){
 	char *parse;
 	char argv[MAX_ARG][20];
 	int i = 0;
-	int k;
 	char message[MAX_TAILLE_MSG];
 	char *userName = malloc(sizeof(char)*20);
 	int nb_req=0;
 	Info info;
 	char *scores;
-	char * parseTrouve;
-	char argTrouve[3][32];
 	
 	int connexion = *(int *)arg;
 	char conn[6];
@@ -195,23 +192,9 @@ void * traitement(void *arg){
 				if(strcmp(argv[0], "TROUVE")==0){
 					/*ANALYSE du mot trouve  */
 					
-					k=0;
-					
-					parseTrouve = strtok(buffer, "/");
-					while(parseTrouve){
-						
-						if(k>=3)
-							break;
-						
-						strcpy(argTrouve[k]	, parseTrouve);
-								
-						k++;
-						
-						parseTrouve = strtok(NULL, "/");
-			
-					}
+				
 					printf("ICI\n");
-					printf("%s %s\n", argTrouve[1], argTrouve[2]);
+					printf("%s %s\n", argv[1], argv[2]);
 					
 					/* envoie de MVALIDE OU MINVALIDE */
 				}
@@ -374,8 +357,10 @@ int main(int argc, char **args){
 						
 						sprintf(message, "TOUR/%s/\r\n", grille);
 						pthread_mutex_lock(&mutex_map);
+						printf("Dans le mutex\n");
 						envoyer_messages_users(map, message, sizeof(message));
 						pthread_mutex_unlock(&mutex_map);
+						
 						
 						if (timerfd_settime(fds[1], 0, &timerValue, NULL) < 0) {
 							printf("could not start timer\n");
@@ -420,8 +405,6 @@ int main(int argc, char **args){
 					timersElapsed = 0;
 					(void) read(fds[1], &timersElapsed, 8);
 					printf("timers elapsed: %d\n", timersElapsed);
-					
-					
 					
 				
 						
