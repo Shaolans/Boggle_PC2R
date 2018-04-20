@@ -60,13 +60,13 @@ int main(int argc, char *argv[])
     if(send(sock, req, strlen(req), 0)==-1){
 		printf("PB SEND\n");
 	}
-	/*if(recv(sock, buffer, sizeof(buffer), 0)==-1){
+	if(recv(sock, buffer, sizeof(buffer), 0)==-1){
 		printf("PB RECV");
 	}
 	
 	printf(buffer);
 	
-	 sprintf(req, "SORT/%s/\r\n", userName); */
+	 sprintf(req, "SORT/%s/\r\n", userName); 
     
     
        
@@ -74,16 +74,13 @@ int main(int argc, char *argv[])
 		printf("PB SEND\n");
 	}*/
 	
-	int i=0;
-	while(1){	
+		int i=0;
+			
 		if(recv(sock, buffer, sizeof(buffer), 0)==-1){
 			printf("PB RECV");
 		}
-		else
-		printf(buffer);
-	}
 		
-		/*printf(buffer);
+		printf(buffer);
 		i++;
 		
 				
@@ -101,11 +98,7 @@ int main(int argc, char *argv[])
 		if(send(sock, req, strlen(req), 0)==-1){
 			printf("PB SEND\n");
 		}
-	
-	sleep(30);
-	
-	printf("PB ICI\n");*/
-	
+
     /* Fermer la connexion */
     shutdown(sock,2);
     close(sock);

@@ -58,6 +58,10 @@ void envoyer_messages_users(map_t map, char* message, int taille){
 	
 	List_keys *keys, *pkeys;
 	int connexion;
+	char buffer[1];
+	socklen_t len;
+	int error = 0;
+	int retval ;
 	
 	keys = hashmap_get_keys(map);
 			
@@ -65,15 +69,23 @@ void envoyer_messages_users(map_t map, char* message, int taille){
 	while(pkeys){
 		
 		connexion=atoi(pkeys->key);
-		printf("ON PASSE ICI %d\n", connexion);
+		
+		len = sizeof (error);
+		retval = getsockopt (connexion, SOL_SOCKET, SO_ERROR, &error, NULL);
+		if (error != 0) {
+			printf("error getting socket error code: %s\n");
+			continue;
+		}
+		printf("ON PASSE ICI %s\n", message);
 		if(send(connexion, message, taille, 0)==-1){
-			perror("send");
-			return EXIT_FAILURE;			
+			perror("send");			
 		}
 		pkeys = pkeys ->next;
 	}
 		
 	list_keys_free(keys);
+	
+	printf("ON EN SORT\n");
 	
 }
 
@@ -136,7 +148,7 @@ void * traitement(void *arg){
 	int connexion = *(int *)arg;
 	char conn[6];
 
-	while(nb_req < 2){
+	while(1){
 		i=0;
 		sprintf(buffer, "\r\n");
 		
@@ -146,7 +158,6 @@ void * traitement(void *arg){
 		}
 		
 		printf(buffer);
-		printf("%d\n", connexion);
 		
 		parse = strtok(buffer, "/");
 		
@@ -201,21 +212,18 @@ void * traitement(void *arg){
 				sprintf(message, "DECONNEXION/%s/\r\n", userName);
 				
 				pthread_mutex_lock(&mutex_map);
-				printf("ON REMOVE\n");
+				
 				hashmap_remove(map, conn);
 				
 				envoyer_messages_users(map, message, sizeof(message));
 				
 				pthread_mutex_unlock(&mutex_map);
+
 				break;
 			}
 			else{
 				if(strcmp(argv[0], "TROUVE")==0){
 					/*ANALYSE du mot trouve  */
-					
-				
-					printf("ICI\n");
-					printf("%s %s\n", argv[1], argv[2]);
 					
 					v = verif_mot(argv[1], argv[2] );
 					
@@ -228,7 +236,6 @@ void * traitement(void *arg){
 						}
 						else{
 							sprintf(message, "MVALIDE/%s/\r\n", argv[1]);
-							
 							lp = malloc(sizeof(struct liste_mot));
 							memcpy(lp, argv[1], strlen(argv[1]));
 							lp -> next = info.motsProposes;
@@ -245,15 +252,13 @@ void * traitement(void *arg){
 				}
 				else{
 					printf("Requete recue de format inconnu\n");
+					printf("%s\n", buffer);
 					
+					break;
 				}
 				
 			}
-		}
-		
-		
-		nb_req ++;
-		
+		}	
 		
 	}
 	
@@ -400,17 +405,17 @@ int main(int argc, char **args){
 						pthread_mutex_lock(&mutex_map);
 						envoyer_messages_users(map, message, sizeof(message));
 						pthread_mutex_unlock(&mutex_map);
-						timerValue.it_value.tv_sec = 2;
-						timerValue.it_interval.tv_sec = 2;
+						timerValue.it_value.tv_sec = 10;
+						timerValue.it_interval.tv_sec = 10;
 						
 						sleep(1);
-						
+						printf("ATTENNTION\n");
 						sprintf(message, "TOUR/%s/\r\n", grille);
 						pthread_mutex_lock(&mutex_map);
-						printf("Dans le mutex\n");
+						
 						envoyer_messages_users(map, message, sizeof(message));
 						pthread_mutex_unlock(&mutex_map);
-						printf("HORS MUTEX\n");
+						
 						
 						if (timerfd_settime(fds[1], 0, &timerValue, NULL) < 0) {
 							printf("could not start timer\n");
@@ -467,6 +472,7 @@ int main(int argc, char **args){
 		
 	
 	}
+	
 	
 	detruire_grille(grille);
 	hashmap_free(map);
