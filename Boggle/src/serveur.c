@@ -30,12 +30,28 @@ typedef struct info_t {
 	
 	char * userName;
 	int score;
+	Liste_mot * motsProposes;
 	
 }Info;
 
 char * grille;
 map_t map ;
 pthread_mutex_t mutex_map;
+Liste_mot * dico;
+
+
+int verif_mot(char *mot, char *traj){
+	
+	if( !verif_trajectoire(traj) )
+		return -1;
+		
+	if( !mot_dans_dico(dico, mot))
+		return -2;
+		
+	return 0;
+	
+	
+}
 
 
 void envoyer_messages_users(map_t map, char* message, int taille){
@@ -47,7 +63,9 @@ void envoyer_messages_users(map_t map, char* message, int taille){
 			
 	pkeys = keys;
 	while(pkeys){
+		
 		connexion=atoi(pkeys->key);
+		printf("ON PASSE ICI %d\n", connexion);
 		if(send(connexion, message, taille, 0)==-1){
 			perror("send");
 			return EXIT_FAILURE;			
@@ -112,6 +130,8 @@ void * traitement(void *arg){
 	int nb_req=0;
 	Info info;
 	char *scores;
+	int v;
+	Liste_mot * lp;
 	
 	int connexion = *(int *)arg;
 	char conn[6];
@@ -122,7 +142,7 @@ void * traitement(void *arg){
 		
 		if(recv(connexion, buffer, sizeof(buffer), 0)==-1){
 			perror("recv");
-			exit(1);
+			
 		}
 		
 		printf(buffer);
@@ -167,7 +187,7 @@ void * traitement(void *arg){
 			
 			if(send(connexion, message, sizeof(message), 0)==-1){
 				perror("send");
-				exit(1);
+				
 			}
 						
 			free(scores);
@@ -181,6 +201,7 @@ void * traitement(void *arg){
 				sprintf(message, "DECONNEXION/%s/\r\n", userName);
 				
 				pthread_mutex_lock(&mutex_map);
+				printf("ON REMOVE\n");
 				hashmap_remove(map, conn);
 				
 				envoyer_messages_users(map, message, sizeof(message));
@@ -196,7 +217,31 @@ void * traitement(void *arg){
 					printf("ICI\n");
 					printf("%s %s\n", argv[1], argv[2]);
 					
-					/* envoie de MVALIDE OU MINVALIDE */
+					v = verif_mot(argv[1], argv[2] );
+					
+					if( v == -1 ){
+						sprintf(message, "MINVALIDE/POS la trajection est erronee/\r\n");
+					}
+					else{
+						if(v == -2 ){
+							sprintf(message, "MINVALIDE/DIC le mot n'apparaitient pas au dico/\r\n");
+						}
+						else{
+							sprintf(message, "MVALIDE/%s/\r\n", argv[1]);
+							
+							lp = malloc(sizeof(struct liste_mot));
+							memcpy(lp, argv[1], strlen(argv[1]));
+							lp -> next = info.motsProposes;
+							info.motsProposes = lp;
+
+						}
+						
+					}
+					
+					if(send(connexion, message, sizeof(message), 0)==-1){
+								perror("send");
+					}
+
 				}
 				else{
 					printf("Requete recue de format inconnu\n");
@@ -242,12 +287,14 @@ int main(int argc, char **args){
 	pthread_t th;
 	char message[100];
 	int nb_tours=-1;
-		
 	
 	if(argc != 2){
 		printf("Usage : numPort\n");
 		return EXIT_FAILURE;
 	}
+	
+	
+	dico = charger_dico();
 	
 	pthread_attr_init(&attr);
 	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
@@ -312,6 +359,7 @@ int main(int argc, char **args){
 	
 	while(1){
 		
+		
 		memcpy(&lecteurs, &lecteursRef, sizeof(lecteursRef));
 		
 		if(select(max1, &lecteurs, NULL, NULL, NULL)==-1){
@@ -355,12 +403,14 @@ int main(int argc, char **args){
 						timerValue.it_value.tv_sec = 2;
 						timerValue.it_interval.tv_sec = 2;
 						
+						sleep(1);
+						
 						sprintf(message, "TOUR/%s/\r\n", grille);
 						pthread_mutex_lock(&mutex_map);
 						printf("Dans le mutex\n");
 						envoyer_messages_users(map, message, sizeof(message));
 						pthread_mutex_unlock(&mutex_map);
-						
+						printf("HORS MUTEX\n");
 						
 						if (timerfd_settime(fds[1], 0, &timerValue, NULL) < 0) {
 							printf("could not start timer\n");
@@ -420,6 +470,7 @@ int main(int argc, char **args){
 	
 	detruire_grille(grille);
 	hashmap_free(map);
+	free_dico(dico);
 	
 	
 	pthread_attr_destroy(&attr);
