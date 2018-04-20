@@ -2,13 +2,11 @@ package boggle.client;
 
 
 import java.io.BufferedReader;
-import java.io.DataOutputStream;
+import java.io.PrintWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.Socket;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 
 import boggle.client.tools.AnswerStack;
@@ -18,7 +16,6 @@ import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
-import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonBar.ButtonData;
@@ -44,7 +41,7 @@ import javafx.stage.Stage;
 public class BoggleWindow {
 	private Socket socket;
 	private BufferedReader in;
-	private DataOutputStream out;
+	private PrintWriter out;
 	private String username;
 	private boolean sayAll;
 	private GridPane grid;
@@ -106,8 +103,9 @@ public class BoggleWindow {
 				try {
 					socket = new Socket(info.getServer(), info.getPort());
 					in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-					out = new DataOutputStream(socket.getOutputStream());
-					out.writeChars("CONNEXION/"+info.getUser()+"/\r\n");
+					out = new PrintWriter(socket.getOutputStream());
+					out.write("CONNEXION/"+info.getUser()+"/\r\n");
+					out.flush();
 					if(gr != null) gr.interrupt();
 					gr = new GameRunner(this);
 					gr.start();
@@ -124,7 +122,8 @@ public class BoggleWindow {
 		disconnect.setOnAction(e->{
 			try {
 				
-				out.writeChars("SORT/"+username+"/\r\n");
+				out.write("SORT/"+username+"/\r\n");
+				out.flush();
 				system.appendText("Déconnexion de "+username+"\n");
 				if(gr != null) gr.interrupt();
 				gr = null;
@@ -168,19 +167,16 @@ public class BoggleWindow {
 		chattext.setPrefHeight(50);
 		chattext.setOnKeyPressed(e->{
 			if(e.getCode()==KeyCode.ENTER) {
-				try {
-					if(sayAll) {
-						chatcontent.appendText(username+": "+chattext.getText()+"\n");
-						out.writeChars("ENVOI/"+chattext.getText()+"/\r\n");	
-					}else {
-						chatcontent.appendText("("+username+" -> "+receiver.getText()+"): "+chattext.getText()+"\n");
-						out.writeChars("PENVOI/"+receiver.getText()+"/"+chattext.getText()+"/\r\n");
-						
-					}
-					chattext.clear();
-				} catch (IOException e1) {
-					e1.printStackTrace();
+				if(sayAll) {
+					chatcontent.appendText(username+": "+chattext.getText()+"\n");
+					out.write("ENVOI/"+chattext.getText()+"/\r\n");
+					out.flush();
+				}else {
+					chatcontent.appendText("("+username+" -> "+receiver.getText()+"): "+chattext.getText()+"\n");
+					out.write("PENVOI/"+receiver.getText()+"/"+chattext.getText()+"/\r\n");
+					out.flush();
 				}
+				chattext.clear();
 			}
 		});
 		
@@ -220,15 +216,12 @@ public class BoggleWindow {
 		word.setOnKeyPressed(e->{
 			if(e.getCode()==KeyCode.ENTER) {
 				if(!word.getText().equals("") && !combinaison.getText().equals("")) {
-					try {
-						out.writeChars("TROUVE/"+word.getText()+"/"+combinaison.getText()+"/\r\n");
-						system.appendText("Envoi de la réponse:\n"+"MOT: "+word.getText()+" TRAJECTOIRE: "+combinaison.getText()+"\n");
-						word.clear();
-						combinaison.clear();
-						clearFramesSelection();
-					} catch (IOException e1) {
-						e1.printStackTrace();
-					}
+					out.write("TROUVE/"+word.getText()+"/"+combinaison.getText()+"/\r\n");
+					out.flush();
+					system.appendText("Envoi de la réponse:\n"+"MOT: "+word.getText()+" TRAJECTOIRE: "+combinaison.getText()+"\n");
+					word.clear();
+					combinaison.clear();
+					clearFramesSelection();
 				}
 				
 			}
@@ -239,15 +232,12 @@ public class BoggleWindow {
 		combinaison.setOnKeyPressed(e->{
 			if(e.getCode()==KeyCode.ENTER) {
 				if(!word.getText().equals("") && !combinaison.getText().equals("")) {
-					try {
-						out.writeChars("TROUVE/"+word.getText()+"/"+combinaison.getText()+"/\r\n");
-						system.appendText("Envoi de la réponse:\n"+"MOT: "+word.getText()+" TRAJECTOIRE: "+combinaison.getText()+"\n");
-						word.clear();
-						combinaison.clear();
-						clearFramesSelection();
-					} catch (IOException e1) {
-						e1.printStackTrace();
-					}
+					out.write("TROUVE/"+word.getText()+"/"+combinaison.getText()+"/\r\n");
+					out.flush();
+					system.appendText("Envoi de la réponse:\n"+"MOT: "+word.getText()+" TRAJECTOIRE: "+combinaison.getText()+"\n");
+					word.clear();
+					combinaison.clear();
+					clearFramesSelection();
 				}
 				
 			}
@@ -274,15 +264,12 @@ public class BoggleWindow {
 		});
 		
 		validatepath.setOnAction(e->{
-			try {
-				out.writeChars("TROUVE/"+word.getText()+"/"+combinaison.getText()+"/\r\n");
-				system.appendText("Envoi de la réponse:\n"+"MOT: "+word.getText()+" TRAJECTOIRE: "+combinaison.getText()+"\n");
-				word.clear();
-				combinaison.clear();
-				clearFramesSelection();
-			} catch (IOException e1) {
-				e1.printStackTrace();
-			}
+			out.write("TROUVE/"+word.getText()+"/"+combinaison.getText()+"/\r\n");
+			out.flush();
+			system.appendText("Envoi de la réponse:\n"+"MOT: "+word.getText()+" TRAJECTOIRE: "+combinaison.getText()+"\n");
+			word.clear();
+			combinaison.clear();
+			clearFramesSelection();
 		});
 		
 		HBox pathbuttons = new HBox();
@@ -300,15 +287,12 @@ public class BoggleWindow {
 		});
 		
 		validateanswer.setOnAction(e->{
-			try {
-				out.writeChars("TROUVE/"+word.getText()+"/"+combinaison.getText()+"/\r\n");
-				system.appendText("Envoi de la réponse:\n"+"MOT: "+word.getText()+" TRAJECTOIRE: "+combinaison.getText()+"\n");
-				word.clear();
-				combinaison.clear();
-				clearFramesSelection();
-			} catch (IOException e1) {
-				e1.printStackTrace();
-			}
+			out.write("TROUVE/"+word.getText()+"/"+combinaison.getText()+"/\r\n");
+			out.flush();
+			system.appendText("Envoi de la réponse:\n"+"MOT: "+word.getText()+" TRAJECTOIRE: "+combinaison.getText()+"\n");
+			word.clear();
+			combinaison.clear();
+			clearFramesSelection();
 		});
 		
 		answerbox.add(word, 0, 0);
@@ -353,11 +337,11 @@ public class BoggleWindow {
 		this.in = in;
 	}
 
-	public DataOutputStream getOut() {
+	public PrintWriter getOut() {
 		return out;
 	}
 
-	public void setOut(DataOutputStream out) {
+	public void setOut(PrintWriter out) {
 		this.out = out;
 	}
 
@@ -514,8 +498,9 @@ public class BoggleWindow {
 		try {
 			socket = new Socket(address, port);
 			in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-			out = new DataOutputStream(socket.getOutputStream());
-			out.writeChars("CONNEXION/UserTest/\r\n");
+			out = new PrintWriter(socket.getOutputStream());
+			out.write("CONNEXION/UserTest/\r\n");
+			out.flush();
 			username = "UserTest";
 			if(gr != null) gr.interrupt();
 			gr = new GameRunner(this);
