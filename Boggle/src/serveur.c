@@ -69,24 +69,14 @@ void envoyer_messages_users(map_t map, char* message, int taille){
 	while(pkeys){
 		
 		connexion=atoi(pkeys->key);
-		
-		len = sizeof (error);
-		retval = getsockopt (connexion, SOL_SOCKET, SO_ERROR, &error, NULL);
-		if (error != 0) {
-			printf("error getting socket error code: %s\n");
-			continue;
-		}
-		printf("ON PASSE ICI %s\n", message);
-		if(send(connexion, message, taille, 0)==-1){
+		if(send(connexion, message, taille, MSG_NOSIGNAL)==-1){
 			perror("send");			
 		}
 		pkeys = pkeys ->next;
 	}
 		
 	list_keys_free(keys);
-	
-	printf("ON EN SORT\n");
-	
+		
 }
 
 
@@ -405,11 +395,9 @@ int main(int argc, char **args){
 						pthread_mutex_lock(&mutex_map);
 						envoyer_messages_users(map, message, sizeof(message));
 						pthread_mutex_unlock(&mutex_map);
-						timerValue.it_value.tv_sec = 10;
-						timerValue.it_interval.tv_sec = 10;
+						timerValue.it_value.tv_sec = 30;
+						timerValue.it_interval.tv_sec = 30;
 						
-						sleep(1);
-						printf("ATTENNTION\n");
 						sprintf(message, "TOUR/%s/\r\n", grille);
 						pthread_mutex_lock(&mutex_map);
 						
@@ -428,8 +416,8 @@ int main(int argc, char **args){
 						if(nb_tours == MAX_TOURS){
 							/* Phase de resultats */
 							
-							timerValue.it_value.tv_sec = 10;
-							timerValue.it_interval.tv_sec = 10;
+							timerValue.it_value.tv_sec = 30;
+							timerValue.it_interval.tv_sec = 30;
 						
 						
 							if (timerfd_settime(fds[1], 0, &timerValue, NULL) < 0) {
