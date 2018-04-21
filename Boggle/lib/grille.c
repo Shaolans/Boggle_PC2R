@@ -208,7 +208,7 @@ int verif_trajectoire(char * traj){
 												else{
 													
 													if(strcmp(cell, "D3")==0){
-														if(strcmp(cell2compare, "C1") && strcmp(cell2compare, "C2") && strcmp(cell2compare, "C3") && strcmp(cell2compare, "D1") && strcmp(cell2compare, "D3") ){
+														if(strcmp(cell2compare, "C2") && strcmp(cell2compare, "C3") && strcmp(cell2compare, "C4") && strcmp(cell2compare, "D2") && strcmp(cell2compare, "D4") ){
 															trajCorrect=0;
 															break;
 														}
@@ -337,7 +337,7 @@ Liste_mot * charger_dico(){
 
     char mot[27] = "";
 	Liste_mot * l = NULL, *lp = NULL, *res = NULL ;
- 
+	int i;
 
     fichier = fopen("./liste_francais.txt", "r");
 
@@ -346,6 +346,13 @@ Liste_mot * charger_dico(){
     if (fichier != NULL){
 
         while(fgets(mot, 27, fichier)){ 
+			i=0;
+			while(i< (int)strlen(mot)) {
+				mot[i] = (char)toupper(mot[i]);
+				i++;
+			}
+			
+			
 			
 			if(res==NULL){
 				l= malloc(sizeof(struct liste_mot));
@@ -378,11 +385,13 @@ void free_dico(Liste_mot * l){
 	Liste_mot *lp;
 	
 	while(l){
+		
 		lp = l;
 		l = l->next;
 		free(lp);
+		
 	}
-	
+
 	
 }
 

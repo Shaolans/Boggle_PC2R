@@ -75,7 +75,7 @@ int main(int argc, char *argv[])
 		if(recv(sock, buffer, sizeof(buffer), 0)==-1){
 			printf("PB RECV");
 		}
-		
+		printf(buffer);
 		 sprintf(req, "SORT/%s/\r\n", userName); 
 		
 		

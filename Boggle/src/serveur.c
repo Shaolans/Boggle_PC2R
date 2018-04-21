@@ -37,17 +37,37 @@ typedef struct info_t {
 char * grille;
 map_t map ;
 pthread_mutex_t mutex_map;
-Liste_mot * dico;
+Liste_mot * dico = NULL;
+Liste_mot * dejaDit = NULL;
 
 
 int verif_mot(char *mot, char *traj){
+	
+	Liste_mot * pmot;
 	
 	if( !verif_trajectoire(traj) )
 		return -1;
 		
 	if( !mot_dans_dico(dico, mot))
 		return -2;
+	
+	pmot = dejaDit;
+	
+	while(pmot){
 		
+		if( strcmp(pmot->mot, mot)==0){
+			return -3;
+		}
+		
+		pmot = pmot->next;
+		
+	}
+	
+	pmot = malloc(sizeof(struct liste_mot) );
+	memcpy(pmot->mot, mot, strlen(mot)+1);
+	pmot->next = dejaDit;
+	dejaDit = pmot;
+	
 	return 0;
 	
 	
@@ -129,11 +149,11 @@ void * traitement(void *arg){
 	int i = 0;
 	char message[MAX_TAILLE_MSG];
 	char *userName = malloc(sizeof(char)*20);
-	int nb_req=0;
 	Info info;
 	char *scores;
 	int v;
 	Liste_mot * lp;
+	int nb_score;
 	
 	int connexion = *(int *)arg;
 	char conn[6];
@@ -215,6 +235,8 @@ void * traitement(void *arg){
 				if(strcmp(argv[0], "TROUVE")==0){
 					/*ANALYSE du mot trouve  */
 					
+					printf("mot %s\n", argv[1]);
+					
 					v = verif_mot(argv[1], argv[2] );
 					
 					if( v == -1 ){
@@ -222,22 +244,36 @@ void * traitement(void *arg){
 					}
 					else{
 						if(v == -2 ){
-							sprintf(message, "MINVALIDE/DIC le mot n'apparaitient pas au dico/\r\n");
+							sprintf(message, "MINVALIDE/DIC le mot n'appartient pas au dico/\r\n");
 						}
 						else{
-							sprintf(message, "MVALIDE/%s/\r\n", argv[1]);
-							lp = malloc(sizeof(struct liste_mot));
-							memcpy(lp, argv[1], strlen(argv[1]));
-							lp -> next = info.motsProposes;
-							info.motsProposes = lp;
+							if( v== -3){
+								sprintf(message, "MINVALIDE/DIC le mot n'appartient pas au dico/\r\n");
+							}
+							else{
+								sprintf(message, "MVALIDE/%s/\r\n", argv[1]);
+								lp = malloc(sizeof(struct liste_mot));
+								memcpy(lp, argv[1], strlen(argv[1]));
+								lp -> next = info.motsProposes;
+								info.motsProposes = lp;
+								
+								nb_score = score(argv[1]);
 
+								pthread_mutex_lock(&mutex_map);
+								
+								info.score = nb_score;
+				
+								pthread_mutex_unlock(&mutex_map);
+
+
+							}
+							
 						}
+						
 						
 					}
 					
-					printf("%s %d\n", message, sizeof(message));
-					
-					if(send(connexion, message, sizeof(message), 0)==-1){
+					if(send(connexion, message, strlen(message), 0)==-1){
 						perror("send");
 					}
 
@@ -279,11 +315,11 @@ int main(int argc, char **args){
 	int max1 =0;
 	int port;
 	struct itimerspec timerValue;
-	int timersElapsed ;
 	pthread_attr_t attr;
 	pthread_t th;
 	char message[100];
 	int nb_tours=-1;
+	char *scores;
 	
 	if(argc != 2){
 		printf("Usage : numPort\n");
@@ -341,9 +377,9 @@ int main(int argc, char **args){
 		
 	max1++;
 	
-	timerValue.it_value.tv_sec = 10;
+	timerValue.it_value.tv_sec = 1;
     timerValue.it_value.tv_nsec = 0;
-    timerValue.it_interval.tv_sec = 10;
+    timerValue.it_interval.tv_sec = 1;
     timerValue.it_interval.tv_nsec = 0;
     
     if (timerfd_settime(fds[1], 0, &timerValue, NULL) < 0) {
@@ -397,15 +433,9 @@ int main(int argc, char **args){
 						pthread_mutex_lock(&mutex_map);
 						envoyer_messages_users(map, message, sizeof(message));
 						pthread_mutex_unlock(&mutex_map);
-						timerValue.it_value.tv_sec = 30;
-						timerValue.it_interval.tv_sec = 30;
-						
-						sprintf(message, "TOUR/%s/\r\n", grille);
-						pthread_mutex_lock(&mutex_map);
-						
-						envoyer_messages_users(map, message, sizeof(message));
-						pthread_mutex_unlock(&mutex_map);
-						
+						timerValue.it_value.tv_sec = 10;
+						timerValue.it_interval.tv_sec = 10;
+												
 						
 						if (timerfd_settime(fds[1], 0, &timerValue, NULL) < 0) {
 							printf("could not start timer\n");
@@ -416,10 +446,20 @@ int main(int argc, char **args){
 					}
 					else{
 						if(nb_tours == MAX_TOURS){
+							
+							pthread_mutex_lock(&mutex_map);
+							scores = scores_actuels(map);
+							sprintf(message, "VAINQUEUR/%s/\r\n", scores);
+							envoyer_messages_users(map, message, sizeof(message));
+							pthread_mutex_unlock(&mutex_map);
+							
+							free(scores);
+							
 							/* Phase de resultats */
 							
-							timerValue.it_value.tv_sec = 30;
-							timerValue.it_interval.tv_sec = 30;
+							
+							timerValue.it_value.tv_sec = 10;
+							timerValue.it_interval.tv_sec = 10;
 						
 						
 							if (timerfd_settime(fds[1], 0, &timerValue, NULL) < 0) {
@@ -427,30 +467,38 @@ int main(int argc, char **args){
 								exit(1);
 							}
 							
+							dejaDit=NULL;
+							
 							
 							nb_tours = -2;
 						}
 						else{
-							/* Fin de la phase de recherche */
 							
-							sprintf(message, "RFIN/\r\n");
+							if(nb_tours!=0){
+									
+								/* Fin de la phase de recherche */
+								
+								sprintf(message, "RFIN/\r\n");
+								pthread_mutex_lock(&mutex_map);
+								envoyer_messages_users(map, message, sizeof(message));
+								pthread_mutex_unlock(&mutex_map);
+								detruire_grille(grille);
+								grille = generer_grille();
+							}
+							
+							sprintf(message, "TOUR/%s/\r\n", grille);
 							pthread_mutex_lock(&mutex_map);
 							envoyer_messages_users(map, message, sizeof(message));
 							pthread_mutex_unlock(&mutex_map);
 							
-							detruire_grille(grille);
-							grille = generer_grille();
 							
 							
 						}
 					}
 					
 					nb_tours++;
-					
-					timersElapsed = 0;
-					(void) read(fds[1], &timersElapsed, 8);
-					printf("timers elapsed: %d\n", timersElapsed);
-					
+					printf("tours %d\n", nb_tours);
+				
 				
 						
 				}
