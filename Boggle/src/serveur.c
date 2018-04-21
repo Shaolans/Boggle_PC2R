@@ -235,8 +235,10 @@ void * traitement(void *arg){
 						
 					}
 					
+					printf("%s %d\n", message, sizeof(message));
+					
 					if(send(connexion, message, sizeof(message), 0)==-1){
-								perror("send");
+						perror("send");
 					}
 
 				}

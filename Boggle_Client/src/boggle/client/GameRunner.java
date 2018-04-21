@@ -57,9 +57,9 @@ public class GameRunner extends Thread {
 					bw.getWord().setDisable(false);
 					
 					String[] scores = info[2].split("[*]");
-					bw.getSystem().appendText("---------- SCORE ----------\nNombre de tirage: "+info[1]+"\n");
+					bw.getSystem().appendText("---------- SCORE ----------\nNombre de tirages : "+scores[0]+"\n");
 					for(int i = 1; i < scores.length; i+=2) {
-						bw.getSystem().appendText("Utilisateur: "+scores[i]+"\t Points: "+scores[i+1]+"\n");
+						bw.getSystem().appendText("Utilisateur : "+scores[i]+"\t Points : "+scores[i+1]+"\n");
 					}
 					
 					break;
@@ -76,9 +76,9 @@ public class GameRunner extends Thread {
 					break;
 				case "VAINQUEUR":
 					String []scoresfin = info[1].split("[*]");
-					bw.getSystem().appendText("Nombre total de tour: "+scoresfin[0]+"\n");
+					bw.getSystem().appendText("Nombre total de tours : "+scoresfin[0]+"\n");
 					for(int i = 1; i < scoresfin.length; i+=2) {
-						bw.getSystem().appendText("Utilisateur: "+scoresfin[i]+"\t Points: "+scoresfin[i+1]+"\n");
+						bw.getSystem().appendText("Utilisateur : "+scoresfin[i]+"\t Points: "+scoresfin[i+1]+"\n");
 					}
 					break;
 				case "TOUR":
@@ -103,7 +103,7 @@ public class GameRunner extends Thread {
 					bw.getSystem().appendText("Le mot "+info[1]+" est valide\n");
 					break;
 				case "MINVALIDE":
-					bw.getSystem().appendText("Le mot est invalide\nRAISON: "+info[1]+"\n");
+					bw.getSystem().appendText("Le mot est invalide\nRAISON : "+info[1]+"\n");
 					break;
 				case "RFIN":
 					bw.getSystem().appendText("---------- FIN DU TOUR ----------\n");
@@ -115,24 +115,24 @@ public class GameRunner extends Thread {
 				case "BILANMOTS":
 					String[] bilanscores = info[2].split("[*]");
 					bw.getSystem().appendText("---------- BILAN DU TOUR ----------\n");
-					bw.getSystem().appendText("Nombre de tours: "+bilanscores[0]+"\n");
+					bw.getSystem().appendText("Nombre de tours : "+bilanscores[0]+"\n");
 					String[] bilanmots = info[1].split("[*]");
-					bw.getSystem().appendText("Mots proposés et validé:\n");
+					bw.getSystem().appendText("Mots proposés et validé :\n");
 					for(String mots: bilanmots) {
 						bw.getSystem().appendText("\t-"+mots+"\n");
 					}
 					
 					bw.getSystem().appendText("---------- SCORE ----------\n");
 					for(int i = 1; i < bilanscores.length; i+=2) {
-						bw.getSystem().appendText("Utilisateur: "+bilanscores[i]+"\t Points: "+bilanscores[i+1]+"\n");
+						bw.getSystem().appendText("Utilisateur : "+bilanscores[i]+"\t Points : "+bilanscores[i+1]+"\n");
 					}
 					
 					break;
 				case "RECEPTION":
-					bw.getChatcontent().appendText("[Message public]: "+info[1]+"\n");
+					bw.getChatcontent().appendText("[Message public] : "+info[1]+"\n");
 					break;
 				case "PRECEPTION":
-					bw.getChatcontent().appendText("("+info[2]+" -> "+bw.getUsername()+"): "+info[1]+"\n");
+					bw.getChatcontent().appendText("("+info[2]+" -> "+bw.getUsername()+") : "+info[1]+"\n");
 					break;
 				}
 

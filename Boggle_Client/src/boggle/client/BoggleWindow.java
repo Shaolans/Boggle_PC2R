@@ -218,7 +218,7 @@ public class BoggleWindow {
 				if(!word.getText().equals("") && !combinaison.getText().equals("")) {
 					out.write("TROUVE/"+word.getText()+"/"+combinaison.getText()+"/\r\n");
 					out.flush();
-					system.appendText("Envoi de la réponse:\n"+"MOT: "+word.getText()+" TRAJECTOIRE: "+combinaison.getText()+"\n");
+					system.appendText("Envoi de la réponse :\n"+"Mot : "+word.getText()+" Trajectoire : "+combinaison.getText()+"\n");
 					word.clear();
 					combinaison.clear();
 					clearFramesSelection();
@@ -234,7 +234,7 @@ public class BoggleWindow {
 				if(!word.getText().equals("") && !combinaison.getText().equals("")) {
 					out.write("TROUVE/"+word.getText()+"/"+combinaison.getText()+"/\r\n");
 					out.flush();
-					system.appendText("Envoi de la réponse:\n"+"MOT: "+word.getText()+" TRAJECTOIRE: "+combinaison.getText()+"\n");
+					system.appendText("Envoi de la réponse :\n"+"Mot : "+word.getText()+" Trajectoire : "+combinaison.getText()+"\n");
 					word.clear();
 					combinaison.clear();
 					clearFramesSelection();
@@ -266,7 +266,7 @@ public class BoggleWindow {
 		validatepath.setOnAction(e->{
 			out.write("TROUVE/"+word.getText()+"/"+combinaison.getText()+"/\r\n");
 			out.flush();
-			system.appendText("Envoi de la réponse:\n"+"MOT: "+word.getText()+" TRAJECTOIRE: "+combinaison.getText()+"\n");
+			system.appendText("Envoi de la réponse :\n"+"MOT: "+word.getText()+" Trajectoire : "+combinaison.getText()+"\n");
 			word.clear();
 			combinaison.clear();
 			clearFramesSelection();
@@ -289,7 +289,7 @@ public class BoggleWindow {
 		validateanswer.setOnAction(e->{
 			out.write("TROUVE/"+word.getText()+"/"+combinaison.getText()+"/\r\n");
 			out.flush();
-			system.appendText("Envoi de la réponse:\n"+"MOT: "+word.getText()+" TRAJECTOIRE: "+combinaison.getText()+"\n");
+			system.appendText("Envoi de la réponse:\n"+"Mot : "+word.getText()+" Trajectoire : "+combinaison.getText()+"\n");
 			word.clear();
 			combinaison.clear();
 			clearFramesSelection();

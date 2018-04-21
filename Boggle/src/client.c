@@ -66,30 +66,15 @@ int main(int argc, char *argv[])
 	
 	printf(buffer);
 	
-	 sprintf(req, "SORT/%s/\r\n", userName); 
-    
-    
-       
-    /*if(send(sock, req, strlen(req), 0)==-1){
-		printf("PB SEND\n");
-	}*/
-	
-		int i=0;
-			
-		if(recv(sock, buffer, sizeof(buffer), 0)==-1){
-			printf("PB RECV");
-		}
-		
-		printf(buffer);
-		i++;
-		
 				
 		sprintf(req, "TROUVE/salut/beaute/\r\n"); 
 		if(send(sock, req, strlen(req), 0)==-1){
 			printf("PB SEND\n");
 		}
 		
-		
+		if(recv(sock, buffer, sizeof(buffer), 0)==-1){
+			printf("PB RECV");
+		}
 		
 		 sprintf(req, "SORT/%s/\r\n", userName); 
 		
