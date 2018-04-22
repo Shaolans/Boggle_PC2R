@@ -78,10 +78,6 @@ void envoyer_messages_users(map_t map, char* message, int taille){
 	
 	List_keys *keys, *pkeys;
 	int connexion;
-	char buffer[1];
-	socklen_t len;
-	int error = 0;
-	int retval ;
 	
 	keys = hashmap_get_keys(map);
 			
@@ -92,6 +88,58 @@ void envoyer_messages_users(map_t map, char* message, int taille){
 		if(send(connexion, message, taille, MSG_NOSIGNAL)==-1){
 			perror("send");			
 		}
+		pkeys = pkeys ->next;
+	}
+		
+	list_keys_free(keys);
+		
+}
+
+void envoyer_messages_autres_users(int my_connexion, map_t map, char* message, int taille){
+	
+	List_keys *keys, *pkeys;
+	int connexion;
+	
+	keys = hashmap_get_keys(map);
+			
+	pkeys = keys;
+	while(pkeys){
+		
+		connexion=atoi(pkeys->key);
+		
+		if(connexion != my_connexion){
+		
+			if(send(connexion, message, taille, MSG_NOSIGNAL)==-1){
+				perror("send");			
+			}
+		}	
+		pkeys = pkeys ->next;
+	}
+		
+	list_keys_free(keys);
+		
+}
+
+void envoyer_messages_prive(char * his_userName, map_t map, char* message, int taille){
+	
+	List_keys *keys, *pkeys;
+	int connexion;
+	Info *info;
+	
+	keys = hashmap_get_keys(map);
+			
+	pkeys = keys;
+	while(pkeys){
+		
+		hashmap_get(map, pkeys->key, &info);
+		
+		if(strcmp(his_userName, info->userName)==0){
+			connexion=atoi(pkeys->key);
+			if(send(connexion, message, taille, MSG_NOSIGNAL)==-1){
+				perror("send");			
+			}
+			break;
+		}	
 		pkeys = pkeys ->next;
 	}
 		
@@ -248,7 +296,7 @@ void * traitement(void *arg){
 						}
 						else{
 							if( v== -3){
-								sprintf(message, "MINVALIDE/DIC le mot n'appartient pas au dico/\r\n");
+								sprintf(message, "MINVALIDE/PRI le mot a deja ete propose/\r\n");
 							}
 							else{
 								sprintf(message, "MVALIDE/%s/\r\n", argv[1]);
@@ -279,10 +327,34 @@ void * traitement(void *arg){
 
 				}
 				else{
-					printf("Requete recue de format inconnu\n");
-					printf("%s\n", buffer);
 					
-					break;
+					if(strcmp(argv[0], "ENVOI")==0){
+						sprintf(message, "RECEPTION/%s/\r\n", argv[1]);
+				
+						pthread_mutex_lock(&mutex_map);
+				
+						envoyer_messages_autres_users(connexion, map, message, sizeof(message));
+				
+						pthread_mutex_unlock(&mutex_map);
+					}
+					else{
+						if(strcmp(argv[0], "PENVOI")==0){
+							sprintf(message, "PRECEPTION/%s/%s\r\n", argv[1], userName);
+				
+							pthread_mutex_lock(&mutex_map);
+				
+							envoyer_messages_prive(argv[2], map, message, sizeof(message));
+				
+							pthread_mutex_unlock(&mutex_map);
+							
+						}
+						else{
+							printf("Requete recue de format inconnu\n");
+							printf("%s\n", buffer);
+						}
+					}
+					
+					
 				}
 				
 			}

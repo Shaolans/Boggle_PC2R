@@ -66,8 +66,9 @@ int main(int argc, char *argv[])
 	
 	printf(buffer);
 	
+		sleep(3);
 				
-		sprintf(req, "TROUVE/salut/beaute/\r\n"); 
+		sprintf(req, "ENVOI/salut beaute/\r\n"); 
 		if(send(sock, req, strlen(req), 0)==-1){
 			printf("PB SEND\n");
 		}
