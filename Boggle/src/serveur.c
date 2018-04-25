@@ -327,7 +327,7 @@ void * traitement(void *arg){
 				
 						pthread_mutex_lock(&mutex_map);
 				
-						envoyer_messages_autres_users(connexion, map, message, sizeof(message));
+						envoyer_messages_autres_users(connexion, map, message, strlen(message));
 				
 						pthread_mutex_unlock(&mutex_map);
 					}
@@ -337,7 +337,7 @@ void * traitement(void *arg){
 				
 							pthread_mutex_lock(&mutex_map);
 				
-							envoyer_messages_prive(argv[1], map, message, sizeof(message));
+							envoyer_messages_prive(argv[1], map, message, strlen(message));
 				
 							pthread_mutex_unlock(&mutex_map);
 							
@@ -364,7 +364,7 @@ void * traitement(void *arg){
 				
 	hashmap_remove(map, conn);
 				
-	envoyer_messages_users(map, message, sizeof(message));
+	envoyer_messages_users(map, message, strlen(message));
 				
 	pthread_mutex_unlock(&mutex_map);
 
@@ -580,8 +580,8 @@ int main(int argc, char **args){
 							envoyer_messages_users(map, message, strlen(message));
 							pthread_mutex_unlock(&mutex_map);
 							
-							timerValue.it_value.tv_sec = 10;
-							timerValue.it_interval.tv_sec = 10;
+							timerValue.it_value.tv_sec = 180;
+							timerValue.it_interval.tv_sec = 180;
 						
 						
 							if (timerfd_settime(fds[1], 0, &timerValue, NULL) < 0) {
