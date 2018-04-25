@@ -16,7 +16,7 @@ public class GameRunner extends Thread {
 	private BufferedReader in;
 	private Frame[][] frames;
 	private AnswerStack as;
-	
+
 	public GameRunner(BoggleWindow bw) {
 		this.bw = bw;
 		in = bw.getIn();
@@ -28,7 +28,7 @@ public class GameRunner extends Thread {
 		frames = bw.getFrames();
 		as = bw.getAs();
 	}
-	
+
 	@Override
 	public void run() {
 		try {
@@ -37,9 +37,11 @@ public class GameRunner extends Thread {
 			while(!isInterrupted()) {
 				String command;
 				command = in.readLine();
+				System.out.println("command: "+command);
 				String[] info = command.split("/");
 				switch(info[0]) {
 				case "BIENVENUE":
+					if(info[1]=="") break;
 					GridPane gpb = bw.getGrid();
 					for(int i = 0; i < 16; i++) {
 						img = new ImageView("file:letters_img/"+info[1].charAt(i)+".jpg");
@@ -55,13 +57,13 @@ public class GameRunner extends Thread {
 					Platform.runLater(new UpdateGrid(gpb, frames, as));
 					bw.getCombinaison().setDisable(false);
 					bw.getWord().setDisable(false);
-					
+
 					String[] scores = info[2].split("[*]");
 					bw.getSystem().appendText("---------- SCORE ----------\nNombre de tirages : "+scores[0]+"\n");
 					for(int i = 1; i < scores.length; i+=2) {
 						bw.getSystem().appendText("Utilisateur : "+scores[i]+"\t Points : "+scores[i+1]+"\n");
 					}
-					
+
 					break;
 				case "CONNECTE":
 					bw.getChatcontent().appendText("[Système] "+info[1]+" vient de se connecter.\n");
@@ -121,12 +123,12 @@ public class GameRunner extends Thread {
 					for(String mots: bilanmots) {
 						bw.getSystem().appendText("\t-"+mots+"\n");
 					}
-					
+
 					bw.getSystem().appendText("---------- SCORE ----------\n");
 					for(int i = 1; i < bilanscores.length; i+=2) {
 						bw.getSystem().appendText("Utilisateur : "+bilanscores[i]+"\t Points : "+bilanscores[i+1]+"\n");
 					}
-					
+
 					break;
 				case "RECEPTION":
 					bw.getChatcontent().appendText("[Message public] : "+info[1]+"\n");
@@ -141,6 +143,6 @@ public class GameRunner extends Thread {
 			e.printStackTrace();
 		}
 	}
-	
-	
+
+
 }
