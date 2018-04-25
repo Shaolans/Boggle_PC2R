@@ -67,6 +67,13 @@ int main(int argc, char *argv[])
 	printf(buffer);
 	
 		sleep(3);
+		
+		while(1){
+			if(recv(sock, buffer, strlen(buffer), 0)==-1){
+				printf("PB RECV");
+			}
+			printf(buffer);
+		}
 				
 		sprintf(req, "ENVOI/salut beaute/\r\n"); 
 		if(send(sock, req, strlen(req), 0)==-1){

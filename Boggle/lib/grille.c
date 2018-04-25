@@ -37,7 +37,7 @@ char * generer_grille(){
 	
 	srand(time(NULL));
 
-	grille = malloc(sizeof(char*)*16);
+	grille = malloc(sizeof(char*)*17);
 	
 	for(i=0; i<4; i++){
 		for(j=0; j<4; j++){
@@ -48,6 +48,8 @@ char * generer_grille(){
 		}
 		
 	}
+	
+	grille[16] = '\0';
 	
 	return grille;
 }

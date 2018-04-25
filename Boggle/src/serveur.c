@@ -35,6 +35,7 @@ typedef struct info_t {
 }Info;
 
 char * grille;
+char grilleVide[]="";
 map_t map ;
 pthread_mutex_t mutex_map;
 Liste_mot * dico = NULL;
@@ -85,9 +86,11 @@ void envoyer_messages_users(map_t map, char* message, int taille){
 	while(pkeys){
 		
 		connexion=atoi(pkeys->key);
+		
 		if(send(connexion, message, taille, MSG_NOSIGNAL)==-1){
 			perror("send");			
 		}
+		
 		pkeys = pkeys ->next;
 	}
 		
@@ -132,7 +135,6 @@ void envoyer_messages_prive(char * his_userName, map_t map, char* message, int t
 	while(pkeys){
 		
 		hashmap_get(map, pkeys->key, &info);
-		
 		if(strcmp(his_userName, info->userName)==0){
 			connexion=atoi(pkeys->key);
 			if(send(connexion, message, taille, MSG_NOSIGNAL)==-1){
@@ -233,12 +235,15 @@ void * traitement(void *arg){
 		}
 		
 		if(strcmp(argv[0], "CONNEXION")==0){
-			memcpy(userName, argv[1], sizeof(argv[1]));
+			if(argv[1][sizeof(argv[1])-1]=='\n')
+				memcpy(userName, argv[1], sizeof(argv[1])-1);
+			else
+				memcpy(userName, argv[1], sizeof(argv[1]));
 			
 			sprintf(message, "CONNECTE/%s/\r\n",userName);
 			
 			pthread_mutex_lock(&mutex_map);
-			envoyer_messages_users(map, message, sizeof(message));
+			envoyer_messages_users(map, message, strlen(message));
 			
 			
 			info.userName = userName;
@@ -254,7 +259,7 @@ void * traitement(void *arg){
 			
 			sprintf(message, "BIENVENUE/%s/%s/\r\n",grille, scores);
 			
-			if(send(connexion, message, sizeof(message), 0)==-1){
+			if(send(connexion, message, strlen(message), 0)==-1){
 				perror("send");
 				
 			}
@@ -265,17 +270,6 @@ void * traitement(void *arg){
 		}
 		else{
 			if(strcmp(argv[0], "SORT")==0){
-				
-				
-				sprintf(message, "DECONNEXION/%s/\r\n", userName);
-				
-				pthread_mutex_lock(&mutex_map);
-				
-				hashmap_remove(map, conn);
-				
-				envoyer_messages_users(map, message, sizeof(message));
-				
-				pthread_mutex_unlock(&mutex_map);
 
 				break;
 			}
@@ -309,7 +303,7 @@ void * traitement(void *arg){
 
 								pthread_mutex_lock(&mutex_map);
 								
-								info.score = nb_score;
+								info.score += nb_score;
 				
 								pthread_mutex_unlock(&mutex_map);
 
@@ -339,11 +333,11 @@ void * traitement(void *arg){
 					}
 					else{
 						if(strcmp(argv[0], "PENVOI")==0){
-							sprintf(message, "PRECEPTION/%s/%s\r\n", argv[1], userName);
+							sprintf(message, "PRECEPTION/%s/%s\r\n", argv[2], userName);
 				
 							pthread_mutex_lock(&mutex_map);
 				
-							envoyer_messages_prive(argv[2], map, message, sizeof(message));
+							envoyer_messages_prive(argv[1], map, message, sizeof(message));
 				
 							pthread_mutex_unlock(&mutex_map);
 							
@@ -351,6 +345,8 @@ void * traitement(void *arg){
 						else{
 							printf("Requete recue de format inconnu\n");
 							printf("%s\n", buffer);
+							
+							break;
 						}
 					}
 					
@@ -362,8 +358,15 @@ void * traitement(void *arg){
 		
 	}
 	
+	sprintf(message, "DECONNEXION/%s/\r\n", userName);
 
-	
+	pthread_mutex_lock(&mutex_map);
+				
+	hashmap_remove(map, conn);
+				
+	envoyer_messages_users(map, message, sizeof(message));
+				
+	pthread_mutex_unlock(&mutex_map);
 
 	
 	printf("Fin de la connexion pour le serveur %d\n", connexion);
@@ -389,7 +392,7 @@ int main(int argc, char **args){
 	struct itimerspec timerValue;
 	pthread_attr_t attr;
 	pthread_t th;
-	char message[100];
+	char message[MAX_TAILLE_MSG];
 	int nb_tours=-1;
 	char *scores;
 	
@@ -459,8 +462,9 @@ int main(int argc, char **args){
         exit(1);
     }
     
-    grille = generer_grille();
+    
     map = hashmap_new();
+    grille = grilleVide;
 	
 	while(1){
 		
@@ -498,12 +502,13 @@ int main(int argc, char **args){
 				}
 				else{
 					
+					printf("tours %d\n", nb_tours);
 					
 					if(nb_tours == -1){
 						
 						sprintf(message, "SESSION/\r\n");
 						pthread_mutex_lock(&mutex_map);
-						envoyer_messages_users(map, message, sizeof(message));
+						envoyer_messages_users(map, message, strlen(message));
 						pthread_mutex_unlock(&mutex_map);
 						timerValue.it_value.tv_sec = 10;
 						timerValue.it_interval.tv_sec = 10;
@@ -519,10 +524,17 @@ int main(int argc, char **args){
 					else{
 						if(nb_tours == MAX_TOURS){
 							
-							pthread_mutex_lock(&mutex_map);
+							sprintf(message, "RFIN/\r\n");
+							envoyer_messages_users(map, message, strlen(message));
+							detruire_grille(grille);
+							
+							sleep(1);
+							
 							scores = scores_actuels(map);
 							sprintf(message, "VAINQUEUR/%s/\r\n", scores);
-							envoyer_messages_users(map, message, sizeof(message));
+							
+							pthread_mutex_lock(&mutex_map);
+							envoyer_messages_users(map, message, strlen(message));
 							pthread_mutex_unlock(&mutex_map);
 							
 							free(scores);
@@ -541,6 +553,7 @@ int main(int argc, char **args){
 							
 							dejaDit=NULL;
 							
+							grille = grilleVide;
 							
 							nb_tours = -2;
 						}
@@ -551,17 +564,30 @@ int main(int argc, char **args){
 								/* Fin de la phase de recherche */
 								
 								sprintf(message, "RFIN/\r\n");
-								pthread_mutex_lock(&mutex_map);
-								envoyer_messages_users(map, message, sizeof(message));
-								pthread_mutex_unlock(&mutex_map);
+								envoyer_messages_users(map, message, strlen(message));
 								detruire_grille(grille);
-								grille = generer_grille();
+
+								
 							}
 							
+							
+							grille = generer_grille();
+							
 							sprintf(message, "TOUR/%s/\r\n", grille);
+							printf(message);
+							sleep(1);
 							pthread_mutex_lock(&mutex_map);
-							envoyer_messages_users(map, message, sizeof(message));
+							envoyer_messages_users(map, message, strlen(message));
 							pthread_mutex_unlock(&mutex_map);
+							
+							timerValue.it_value.tv_sec = 10;
+							timerValue.it_interval.tv_sec = 10;
+						
+						
+							if (timerfd_settime(fds[1], 0, &timerValue, NULL) < 0) {
+								printf("could not start timer\n");
+								exit(1);
+							}
 							
 							
 							
@@ -569,7 +595,7 @@ int main(int argc, char **args){
 					}
 					
 					nb_tours++;
-					printf("tours %d\n", nb_tours);
+					
 				
 				
 						
@@ -583,8 +609,7 @@ int main(int argc, char **args){
 	
 	}
 	
-	
-	detruire_grille(grille);
+
 	hashmap_free(map);
 	free_dico(dico);
 	

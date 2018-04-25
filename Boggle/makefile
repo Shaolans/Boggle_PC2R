@@ -29,10 +29,10 @@ test: test-serveur
 #	-$$PWD/bin/ftp_multi_serveur 2000 /tmp &
 
 test-serveur: $(BIN)serveur
-	-$$PWD/bin/serveur 2006
+	-$$PWD/bin/serveur 2007
 	
 test-client: $(BIN)client
-	-$$PWD/bin/client 127.0.0.1 2006
+	-$$PWD/bin/client 127.0.0.1 2007
 	
 $(BIN)serveur: $(OBJ)serveur.o $(OBJ)grille.o $(OBJ)hashmap.o
 	@if [ -d $(BIN) ]; then : ; else mkdir $(BIN); fi
