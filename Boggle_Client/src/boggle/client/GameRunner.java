@@ -39,6 +39,7 @@ public class GameRunner extends Thread {
 				command = in.readLine();
 				System.out.println("command: "+command);
 				String[] info = command.split("/");
+				if(info.length == 0) continue;
 				switch(info[0]) {
 				case "BIENVENUE":
 
@@ -80,6 +81,7 @@ public class GameRunner extends Thread {
 					break;
 				case "VAINQUEUR":
 					String []scoresfin = info[1].split("[*]");
+					bw.getSystem().appendText("---------- VAINQUEUR ----------\n");
 					bw.getSystem().appendText("Nombre total de tours : "+scoresfin[0]+"\n");
 					for(int i = 1; i < scoresfin.length; i+=2) {
 						bw.getSystem().appendText("Utilisateur : "+scoresfin[i]+"\t Points: "+scoresfin[i+1]+"\n");
