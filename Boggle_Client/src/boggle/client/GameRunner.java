@@ -39,6 +39,7 @@ public class GameRunner extends Thread {
 				command = in.readLine();
 				System.out.println("command: "+command);
 				String[] info = command.split("/");
+				if(info.length == 0) continue;
 				switch(info[0]) {
 				case "BIENVENUE":
 
