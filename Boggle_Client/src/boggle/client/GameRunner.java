@@ -41,7 +41,14 @@ public class GameRunner extends Thread {
 				String[] info = command.split("/");
 				switch(info[0]) {
 				case "BIENVENUE":
-					if(info[1]=="") break;
+
+					String[] scores = info[2].split("[*]");
+					bw.getSystem().appendText("---------- SCORE ----------\nNombre de tirages : "+scores[0]+"\n");
+					for(int i = 1; i < scores.length; i+=2) {
+						bw.getSystem().appendText("Utilisateur : "+scores[i]+"\t Points : "+scores[i+1]+"\n");
+					}
+
+					if(info[1].length()==0) break;
 					GridPane gpb = bw.getGrid();
 					for(int i = 0; i < 16; i++) {
 						img = new ImageView("file:letters_img/"+info[1].charAt(i)+".jpg");
@@ -58,11 +65,6 @@ public class GameRunner extends Thread {
 					bw.getCombinaison().setDisable(false);
 					bw.getWord().setDisable(false);
 
-					String[] scores = info[2].split("[*]");
-					bw.getSystem().appendText("---------- SCORE ----------\nNombre de tirages : "+scores[0]+"\n");
-					for(int i = 1; i < scores.length; i+=2) {
-						bw.getSystem().appendText("Utilisateur : "+scores[i]+"\t Points : "+scores[i+1]+"\n");
-					}
 
 					break;
 				case "CONNECTE":
