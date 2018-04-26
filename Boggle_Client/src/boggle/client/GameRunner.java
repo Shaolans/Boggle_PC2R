@@ -81,15 +81,19 @@ public class GameRunner extends Thread {
 					bw.getSystem().appendText("La partie va commencer dans environ 10 secondes.\n");
 					break;
 				case "VAINQUEUR":
-					bw.getGrid().getChildren().clear();
-					BoggleWindow.init_grid(bw.getGrid());
+					
+					Platform.runLater(()->{
+						bw.getGrid().getChildren().clear();
+						BoggleWindow.init_grid(bw.getGrid());
+					});
+					
 
 
 					String []scoresfin = info[1].split("[*]");
 					bw.getSystem().appendText("---------- VAINQUEUR ----------\n");
 					bw.getSystem().appendText("Nombre total de tours : "+scoresfin[0]+"\n");
 					for(int i = 1; i < scoresfin.length; i+=2) {
-						bw.getSystem().appendText("Utilisateur : "+scoresfin[i]+"\t Points: "+scoresfin[i+1]+"\n");
+						bw.getSystem().appendText("Utilisateur : "+scoresfin[i]+"\t Points : "+scoresfin[i+1]+"\n");
 					}
 					break;
 				case "TOUR":

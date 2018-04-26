@@ -24,6 +24,7 @@
 #define MAX_ARG 3
 #define MAX_TOURS 2
 #define MAX_TAILLE_MSG 10000
+#define TEMPS_TOURS 180
 
 
 typedef struct info_t {
@@ -185,6 +186,58 @@ char * scores_actuels(map_t map){
 	list_keys_free(keys);
 	
 	return scores;
+	
+	
+}
+
+
+void envoyer_bilan_tour(map_t map){
+	
+	List_keys *keys, *pkeys;
+	Info *pinfo;
+	char * score;
+	char * bilan;
+	char message[MAX_TAILLE_MSG];
+	int connexion;
+	int taille;
+	
+	
+	score = scores_actuels(map);
+		
+	keys = hashmap_get_keys(map);
+	
+	pkeys = keys;
+	while(pkeys){
+		
+		connexion=atoi(pkeys->key);
+		hashmap_get(map, pkeys->key, &pinfo);
+		bilan = malloc(sizeof(char)*100);
+		bilan[0]='\0';
+		while(pinfo->motsProposes){
+			
+			taille = sizeof(bilan)+sizeof(pinfo->motsProposes->mot)+1;
+			memcpy(bilan, bilan, taille);
+			strcat(bilan, pinfo->motsProposes->mot);
+			strcat(bilan, "*");
+			
+			pinfo->motsProposes = pinfo->motsProposes->next;
+		}
+		
+		sprintf(message, "BILANMOTS/%s/%s/\r\n", bilan , score);
+		
+		printf(message);
+		
+		if(send(connexion, message, strlen(message), MSG_NOSIGNAL)==-1){
+				perror("send");			
+		}
+		
+		free(bilan);
+		
+		pkeys = pkeys ->next;
+	}
+		
+	list_keys_free(keys);
+	free(score);
 	
 	
 }
@@ -528,8 +581,10 @@ int main(int argc, char **args){
 							envoyer_messages_users(map, message, strlen(message));
 							detruire_grille(grille);
 							
-							sleep(1);
-							
+							pthread_mutex_lock(&mutex_map);
+							envoyer_bilan_tour(map);
+							pthread_mutex_unlock(&mutex_map);
+												
 							scores = scores_actuels(map);
 							sprintf(message, "VAINQUEUR/%s/\r\n", scores);
 							
@@ -566,7 +621,10 @@ int main(int argc, char **args){
 								sprintf(message, "RFIN/\r\n");
 								envoyer_messages_users(map, message, strlen(message));
 								detruire_grille(grille);
-
+								
+								pthread_mutex_lock(&mutex_map);
+								envoyer_bilan_tour(map);
+								pthread_mutex_unlock(&mutex_map);
 								
 							}
 							
@@ -575,13 +633,13 @@ int main(int argc, char **args){
 							
 							sprintf(message, "TOUR/%s/\r\n", grille);
 							printf(message);
-							sleep(1);
+							
 							pthread_mutex_lock(&mutex_map);
 							envoyer_messages_users(map, message, strlen(message));
 							pthread_mutex_unlock(&mutex_map);
 							
-							timerValue.it_value.tv_sec = 180;
-							timerValue.it_interval.tv_sec = 180;
+							timerValue.it_value.tv_sec = TEMPS_TOURS;
+							timerValue.it_interval.tv_sec = TEMPS_TOURS;
 						
 						
 							if (timerfd_settime(fds[1], 0, &timerValue, NULL) < 0) {
