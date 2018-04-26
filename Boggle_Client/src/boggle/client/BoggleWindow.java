@@ -52,8 +52,8 @@ public class BoggleWindow {
 	private TextField word;
 	private AnswerStack as;
 	private Frame[][] frames;
-	
-	
+
+
 	public TextField getWord() {
 		return word;
 	}
@@ -82,25 +82,27 @@ public class BoggleWindow {
 		sayAll = true;
 		as = new AnswerStack(this);
 		frames = new Frame[4][4];
-		
+
 		stage.getIcons().add(new Image("file:icons/boggle_icon.jpg"));
 
-		
-		
+
+
 		stage.setTitle("Boggle Game");
 		VBox vbox = new VBox();
 		HBox hbox = new HBox();
-		
+
 		MenuBar mb = new MenuBar();
 		Menu menu = new Menu("Action");
 
-		
+
 		MenuItem connect = new MenuItem("Rejoindre un serveur");
 		Dialog<ConnectInfo> infoserver = initConnectServer();
 		connect.setOnAction(e->{
 			Optional<ConnectInfo> result = infoserver.showAndWait();
 			result.ifPresent(info->{
 				try {
+					chatcontent.setText("");
+					system.setText("");
 					socket = new Socket(info.getServer(), info.getPort());
 					in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 					out = new PrintWriter(socket.getOutputStream());
@@ -117,11 +119,11 @@ public class BoggleWindow {
 				username = info.getUser();
 			});
 		});
-		
+
 		MenuItem disconnect = new MenuItem("Déconnexion");
 		disconnect.setOnAction(e->{
 			try {
-				
+
 				out.write("SORT/"+username+"/\r\n");
 				out.flush();
 				system.appendText("Déconnexion de "+username+"\n");
@@ -134,33 +136,33 @@ public class BoggleWindow {
 			} catch (IOException e1) {
 				e1.printStackTrace();
 			}
-			
+
 		});
-		
+
 
 		MenuItem quit = new MenuItem("Quitter");
 		quit.setOnAction(e->{
 			stage.close();
 		});
-		
+
 		menu.getItems().addAll(connect, disconnect, quit);
 		mb.getMenus().add(menu);
-		
-		
+
+
 		VBox chat = new VBox();
 		chatcontent = new TextArea();
 		chatcontent.setPrefSize(400, 600);
 		chatcontent.setEditable(false);
-		
-		
+
+
 		HBox chattextbox = new HBox();
-		
+
 
 		TextField receiver = new TextField();
 		receiver.setPromptText("Destinataire");
 		receiver.setPrefWidth(80);
 		receiver.setDisable(true);
-		
+
 		TextField chattext = new TextField();
 		chattext.setPromptText("Envoyer un message");
 		chattext.setPrefWidth(400);
@@ -179,8 +181,8 @@ public class BoggleWindow {
 				chattext.clear();
 			}
 		});
-		
-		
+
+
 		@SuppressWarnings({ "rawtypes", "unchecked" })
 		ChoiceBox<String> choicemsgmode = new ChoiceBox(FXCollections.observableArrayList("Tous","Privé"));
 		choicemsgmode.setValue("Tous");
@@ -196,17 +198,17 @@ public class BoggleWindow {
 				}
 			}
 		});
-		
+
 		VBox optionchat = new VBox();
 		optionchat.getChildren().addAll(choicemsgmode, receiver);
-		
+
 		chattextbox.getChildren().addAll(optionchat, chattext);
-		
+
 		chat.getChildren().addAll(chatcontent, chattextbox);
 
 		grid = new GridPane();
 		init_grid(grid);
-		
+
 		VBox game = new VBox();
 		combinaison = new TextField();
 		combinaison.setMinWidth(300);
@@ -223,11 +225,11 @@ public class BoggleWindow {
 					combinaison.clear();
 					clearFramesSelection();
 				}
-				
+
 			}
 		});
-		
-		
+
+
 		combinaison.setPromptText("Envoyer la combinaison");
 		combinaison.setOnKeyPressed(e->{
 			if(e.getCode()==KeyCode.ENTER) {
@@ -239,30 +241,30 @@ public class BoggleWindow {
 					combinaison.clear();
 					clearFramesSelection();
 				}
-				
+
 			}
 		});
-		
+
 		system = new TextArea();
 		system.setEditable(false);
-		
+
 		Label tmpg = new Label("Grille");
 		tmpg.setFont(new Font(25));
 		Label tmps = new Label("Système");
 		tmps.setFont(new Font(15));
 		Label tmpr = new Label("Réponse");
 		tmpr.setFont(new Font(15));
-		
+
 		Button clearpath = new Button("Effacer");
 		Button validatepath = new Button("Valider");
-		
+
 		clearpath.setOnAction(e->{
 			clearFramesSelection();
 			as.clear();
 			combinaison.clear();
 			word.clear();
 		});
-		
+
 		validatepath.setOnAction(e->{
 			out.write("TROUVE/"+word.getText()+"/"+combinaison.getText()+"/\r\n");
 			out.flush();
@@ -271,21 +273,21 @@ public class BoggleWindow {
 			combinaison.clear();
 			clearFramesSelection();
 		});
-		
+
 		HBox pathbuttons = new HBox();
 		pathbuttons.getChildren().addAll(validatepath, clearpath);
-		
+
 		GridPane answerbox = new GridPane();
 		Button clearanswer = new Button("Effacer");
 		Button validateanswer = new Button("Valider");
-		
+
 		clearanswer.setOnAction(e->{
 			clearFramesSelection();
 			as.clear();
 			combinaison.clear();
 			word.clear();
 		});
-		
+
 		validateanswer.setOnAction(e->{
 			out.write("TROUVE/"+word.getText()+"/"+combinaison.getText()+"/\r\n");
 			out.flush();
@@ -294,21 +296,21 @@ public class BoggleWindow {
 			combinaison.clear();
 			clearFramesSelection();
 		});
-		
+
 		answerbox.add(word, 0, 0);
 		answerbox.add(combinaison, 0, 1);
 		answerbox.add(clearanswer, 1, 0);
 		answerbox.add(validateanswer, 1, 1);
-		
+
 		game.getChildren().addAll(tmpg, new Separator(), grid, pathbuttons, new Separator(), tmps, system, tmpr, answerbox);
-		
+
 		hbox.getChildren().addAll(chat, game);
 		vbox.getChildren().addAll(mb, hbox);
 		stage.setScene(new Scene(vbox));
 		stage.show();
-		
+
 	}
-	
+
 	public AnswerStack getAs() {
 		return as;
 	}
@@ -376,7 +378,7 @@ public class BoggleWindow {
 	public void setSystem(TextArea system) {
 		this.system = system;
 	}
-	
+
 	public GameRunner getGr() {
 		return gr;
 	}
@@ -400,31 +402,31 @@ public class BoggleWindow {
 		Dialog<ConnectInfo> dialog = new Dialog<>();
 		dialog.setTitle("Connexion Serveur");
 		dialog.setHeaderText("Veuillez spécifier tout les champs.");
-		
+
 		ImageView icon = new ImageView("file:icons/server_icon.png");
 		icon.setFitWidth(100);
 		icon.setFitHeight(100);
 		dialog.setGraphic(icon);
-		
+
 		Stage stage = (Stage) dialog.getDialogPane().getScene().getWindow();
 		stage.getIcons().add(new Image("file:icons/server_icon.png"));
-		
+
 		ButtonType loginButtonType = new ButtonType("Connexion", ButtonData.OK_DONE);
 		dialog.getDialogPane().getButtonTypes().addAll(loginButtonType, ButtonType.CANCEL);
-		
+
 		GridPane grid = new GridPane();
 		grid.setHgap(10);
 		grid.setVgap(10);
 		grid.setPadding(new Insets(20, 150, 10, 10));
-		
-		
+
+
 		TextField server = new TextField();
 		server.setPromptText("Adresse serveur");
 		TextField port = new TextField();
 		port.setPromptText("Port");
 		TextField username = new TextField();
 		username.setPromptText("Utilisateur");
-		
+
 
 		grid.add(new Label("Adresse serveur:"), 0, 0);
 		grid.add(server, 1, 0);
@@ -432,68 +434,68 @@ public class BoggleWindow {
 		grid.add(port, 1, 1);
 		grid.add(new Label("Utilisateur:"), 0, 2);
 		grid.add(username, 1, 2);
-		
+
 		dialog.getDialogPane().setContent(grid);
-		
+
 		dialog.setResultConverter(dialogButton -> {
 		    if (dialogButton == loginButtonType) {
 		        return new ConnectInfo(server.getText(), Integer.parseInt(port.getText()), username.getText());
 		    }
 		    return null;
 		});
-		
+
 		return dialog;
-		
+
 	}
-	
+
 	public static void init_grid(GridPane grid) {
 		ImageView img;
-		
+
 		img = new ImageView("file:grid_init/A.jpg");
 		img.setFitWidth(75);
 		img.setFitHeight(75);
 		grid.add(img, 0, 1);
-		
+
 		img = new ImageView("file:grid_init/B.jpg");
 		img.setFitWidth(75);
 		img.setFitHeight(75);
 		grid.add(img, 0, 2);
-		
+
 		img = new ImageView("file:grid_init/C.jpg");
 		img.setFitWidth(75);
 		img.setFitHeight(75);
 		grid.add(img, 0, 3);
-		
+
 		img = new ImageView("file:grid_init/D.jpg");
 		img.setFitWidth(75);
 		img.setFitHeight(75);
 		grid.add(img, 0, 4);
-		
+
 		img = new ImageView("file:grid_init/1.png");
 		img.setFitWidth(75);
 		img.setFitHeight(55);
 		grid.add(img, 1, 0);
-		
+
 		img = new ImageView("file:grid_init/2.png");
 		img.setFitWidth(75);
 		img.setFitHeight(55);
 		grid.add(img, 2, 0);
-		
+
 		img = new ImageView("file:grid_init/3.png");
 		img.setFitWidth(75);
 		img.setFitHeight(55);
 		grid.add(img, 3, 0);
-		
+
 		img = new ImageView("file:grid_init/4.png");
 		img.setFitWidth(75);
 		img.setFitHeight(55);
 		grid.add(img, 4, 0);
-		
-		
-		
-		
+
+
+
+
 	}
-	
+
 	public void commandLineConnect(String address, int port) {
 		try {
 			socket = new Socket(address, port);
@@ -508,9 +510,9 @@ public class BoggleWindow {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		
+
 	}
-	
+
 	public void clearFramesSelection() {
 
 		for(Frame[] f: frames) {
@@ -519,7 +521,7 @@ public class BoggleWindow {
 				grid.getChildren().remove(fs.getImg());
 			}
 		}
-		
+
 		for(Frame[] f: frames) {
 			for(Frame fs: f) {
 				grid.add(fs.getImg(), fs.getCol()+1, fs.getRow()+1);
@@ -527,5 +529,5 @@ public class BoggleWindow {
 			}
 		}
 	}
-	
+
 }

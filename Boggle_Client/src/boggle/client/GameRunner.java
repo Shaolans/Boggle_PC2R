@@ -78,8 +78,13 @@ public class GameRunner extends Thread {
 					break;
 				case "SESSION":
 					bw.getSystem().appendText("---------- DEBUT DE SESSION ----------\n");
+					bw.getSystem().appendText("La partie va commencer dans environ 10 secondes.\n");
 					break;
 				case "VAINQUEUR":
+					bw.getGrid().getChildren().clear();
+					BoggleWindow.init_grid(bw.getGrid());
+
+
 					String []scoresfin = info[1].split("[*]");
 					bw.getSystem().appendText("---------- VAINQUEUR ----------\n");
 					bw.getSystem().appendText("Nombre total de tours : "+scoresfin[0]+"\n");
