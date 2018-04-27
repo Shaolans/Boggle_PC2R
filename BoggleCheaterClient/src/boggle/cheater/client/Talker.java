@@ -12,8 +12,8 @@ public class Talker extends Thread {
 		try {
 			while(true) {
 				
-				Thread.sleep(((long)Math.random()*10000));
-				if(Math.random() > 0.5) {
+				Thread.sleep((long)(Math.random()*2000));
+				if(Math.random() < 0.1) {
 					String msg = "ENVOI/"+bc.getTalkLines().get((int)(Math.random()*bc.getTalkLines().size()));
 					System.out.println("TO SERVER: "+msg);
 					bc.send(msg+"/\r\n");
