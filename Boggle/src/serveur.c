@@ -22,7 +22,7 @@
 
 
 #define MAX_ARG 3
-#define MAX_TOURS 2
+#define MAX_TOURS 3
 #define MAX_TAILLE_MSG 10000
 #define TEMPS_TOURS 180
 
@@ -41,6 +41,7 @@ map_t map ;
 pthread_mutex_t mutex_map;
 Liste_mot * dico = NULL;
 Liste_mot * dejaDit = NULL;
+int nb_tours;
 
 
 int verif_mot(char *mot, char *traj){
@@ -164,7 +165,7 @@ char * scores_actuels(map_t map){
 	
 	scores = malloc(sizeof(char)*100);
 	
-	sprintf(scores, "%d*", MAX_TOURS);
+	sprintf(scores, "%d*", nb_tours+1);
 			
 	pkeys = keys;
 	while(pkeys){
@@ -230,9 +231,7 @@ void envoyer_bilan_tour(map_t map){
 		if(send(connexion, message, strlen(message), MSG_NOSIGNAL)==-1){
 				perror("send");			
 		}
-		
-		free(bilan);
-		
+
 		pkeys = pkeys ->next;
 	}
 		
@@ -248,10 +247,10 @@ void * traitement(void *arg){
 	
 	char buffer[MAX_TAILLE_MSG];
 	char *parse;
-	char argv[MAX_ARG][20];
+	char argv[MAX_ARG][MAX_TAILLE_MSG-20];
 	int i = 0;
 	char message[MAX_TAILLE_MSG];
-	char *userName = malloc(sizeof(char)*20);
+	char *userName = malloc(sizeof(char)*(MAX_TAILLE_MSG-20));
 	Info info;
 	char *scores;
 	int v;
@@ -446,7 +445,6 @@ int main(int argc, char **args){
 	pthread_attr_t attr;
 	pthread_t th;
 	char message[MAX_TAILLE_MSG];
-	int nb_tours=-1;
 	char *scores;
 	
 	if(argc != 2){
@@ -454,6 +452,7 @@ int main(int argc, char **args){
 		return EXIT_FAILURE;
 	}
 	
+	nb_tours=-1;
 	
 	dico = charger_dico();
 	
@@ -579,7 +578,7 @@ int main(int argc, char **args){
 							
 							sprintf(message, "RFIN/\r\n");
 							envoyer_messages_users(map, message, strlen(message));
-							detruire_grille(grille);
+							
 							
 							pthread_mutex_lock(&mutex_map);
 							envoyer_bilan_tour(map);
