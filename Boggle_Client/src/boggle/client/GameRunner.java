@@ -81,12 +81,12 @@ public class GameRunner extends Thread {
 					bw.getSystem().appendText("La partie va commencer dans environ 10 secondes.\n");
 					break;
 				case "VAINQUEUR":
-					
+
 					Platform.runLater(()->{
 						bw.getGrid().getChildren().clear();
 						BoggleWindow.init_grid(bw.getGrid());
 					});
-					
+
 
 
 					String []scoresfin = info[1].split("[*]");
@@ -144,9 +144,11 @@ public class GameRunner extends Thread {
 
 					break;
 				case "RECEPTION":
+					if(info.length > 1) break;
 					bw.getChatcontent().appendText("[Message public] : "+info[1]+"\n");
 					break;
 				case "PRECEPTION":
+					if(info.length > 1) break;
 					bw.getChatcontent().appendText("("+info[2]+" -> "+bw.getUsername()+") : "+info[1]+"\n");
 					break;
 				}

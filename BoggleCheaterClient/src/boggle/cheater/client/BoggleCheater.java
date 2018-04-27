@@ -30,7 +30,7 @@ public class BoggleCheater {
 		Talker t = new Talker(bc);
 		t.start();
 		bc.run();
-		
+
 
 
 	}
@@ -95,7 +95,7 @@ public class BoggleCheater {
 					String msg = "TROUVE/"+entry.getKey()+"/"+entry.getValue();
 					System.out.println("TO SERVER: "+msg);
 					try {
-						Thread.sleep((long)250);
+						Thread.sleep((long)100);
 					} catch (InterruptedException e) {
 						e.printStackTrace();
 					}
@@ -108,7 +108,7 @@ public class BoggleCheater {
 					String msg = "TROUVE/"+entry.getKey()+"/"+entry.getValue();
 					System.out.println("TO SERVER: "+msg);
 					try {
-						Thread.sleep((long)250);
+						Thread.sleep((long)100);
 					} catch (InterruptedException e) {
 						e.printStackTrace();
 					}
