@@ -29,3 +29,7 @@ Liste_mot * charger_dico();
 void free_dico(Liste_mot * l);
 
 int mot_dans_dico(Liste_mot * dico, char * mot);
+
+int verif_grille_format(char *grille);
+
+void free_grillesDemandees(Liste_mot * grilles);

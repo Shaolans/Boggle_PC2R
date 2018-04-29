@@ -29,7 +29,7 @@ test: test-serveur
 #	-$$PWD/bin/ftp_multi_serveur 2000 /tmp &
 
 test-serveur: $(BIN)serveur
-	-$$PWD/bin/serveur 2007
+	-$$PWD/bin/serveur -port 2006 -tours 6 -grilles ASZDEFRGHTYJKUIL CDVFBGNHUYIKOPLK
 	
 test-client: $(BIN)client
 	-$$PWD/bin/client 127.0.0.1 2007

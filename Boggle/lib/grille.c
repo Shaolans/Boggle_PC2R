@@ -417,3 +417,70 @@ int mot_dans_dico(Liste_mot *dico, char *mot){
 	
 }
 
+
+int verif_grille_format(char *grille){
+	
+	int i;
+	
+	if((int)strlen(grille) != 16)
+		return 0;
+		
+	while(i< 16) {
+		grille[i] = (char)toupper(grille[i]);
+		if( grille[i]!='A' &&
+			grille[i]!='B' &&
+			grille[i]!='C' &&
+			grille[i]!='D' &&
+			grille[i]!='E' &&
+			grille[i]!='F' &&
+			grille[i]!='G' &&
+			grille[i]!='H' &&
+			grille[i]!='I' &&
+			grille[i]!='J' &&
+			grille[i]!='K' &&
+			grille[i]!='L' &&
+			grille[i]!='M' &&
+			grille[i]!='N' &&
+			grille[i]!='O' &&
+			grille[i]!='P' &&
+			grille[i]!='Q' &&
+			grille[i]!='R' &&
+			grille[i]!='S' &&
+			grille[i]!='T' &&
+			grille[i]!='U' &&
+			grille[i]!='V' &&
+			grille[i]!='W' &&
+			grille[i]!='X' &&
+			grille[i]!='Y' &&
+			grille[i]!='Z' 
+		){
+			return 0;
+		}
+			
+		i++;
+	}
+	
+	return 1;
+	
+}
+
+
+void free_grillesDemandees(Liste_mot * grilles){
+	
+	Liste_mot *trouverCycle;
+	trouverCycle = grilles;
+
+	
+	while(grilles->next != trouverCycle){
+		grilles = grilles->next;
+	}
+	
+	grilles->next = NULL;
+	
+	grilles = trouverCycle;
+	
+	free_dico(grilles);
+	
+	
+}
+

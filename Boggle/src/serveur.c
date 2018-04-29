@@ -22,9 +22,8 @@
 
 
 #define MAX_ARG 3
-#define MAX_TOURS 3
 #define MAX_TAILLE_MSG 10000
-#define TEMPS_TOURS 180
+#define TEMPS_TOURS 1
 
 
 typedef struct info_t {
@@ -42,6 +41,9 @@ pthread_mutex_t mutex_map;
 Liste_mot * dico = NULL;
 Liste_mot * dejaDit = NULL;
 int nb_tours;
+int MAX_TOURS;
+Liste_mot * grillesDemandees = NULL;
+
 
 
 int verif_mot(char *mot, char *traj){
@@ -446,10 +448,84 @@ int main(int argc, char **args){
 	pthread_t th;
 	char message[MAX_TAILLE_MSG];
 	char *scores;
+	int grillesAlea = 1;
+	Liste_mot * pgrillesDemand;
+	Liste_mot * premiereGrille = NULL;
+	int k;
 	
-	if(argc != 2){
-		printf("Usage : numPort\n");
-		return EXIT_FAILURE;
+	
+	/* valeurs par defaut */
+	port = 2006;
+	MAX_TOURS = 3;	
+	
+	for(i=1; i<argc; i++){
+		if(strcmp(args[i], "-port")==0){
+			port = atoi(args[++i]);
+			if(port < 1 ){
+				printf("Error : port > 0\n");
+				return EXIT_FAILURE;
+			}
+		}
+		else{
+			if(strcmp(args[i], "-tours")==0){
+				MAX_TOURS = atoi(args[++i]);
+				if(MAX_TOURS < 1){
+					printf("Error : tours > 0\n");
+					return EXIT_FAILURE;
+				}
+			}
+			else{
+				if(strcmp(args[i], "-grilles")==0){
+					i++;
+					grillesAlea = 0;
+					while(i<argc && strcmp(args[i], "-port") && strcmp(args[i], "-tours")){
+						
+						if(verif_grille_format(args[i])==0){
+							printf("-grilles format %s incorrect : 16 letters {A ... Z }\n", args[i]);
+							return EXIT_FAILURE;
+						}
+						
+						k=0;
+												
+						grillesDemandees = malloc(sizeof(Liste_mot));
+						
+						if(premiereGrille == NULL){
+							premiereGrille = grillesDemandees;
+						}
+						else{
+							pgrillesDemand->next = grillesDemandees;
+							
+						}
+						pgrillesDemand = grillesDemandees;
+						
+						
+						
+						
+						while(k<16){
+							pgrillesDemand->mot[k] = args[i][k];
+							k++;
+						}
+						
+						pgrillesDemand->mot[k] = '\0';
+						
+						i++;
+					}
+					
+					pgrillesDemand->next = premiereGrille;
+					
+					grillesDemandees = premiereGrille;
+					
+					
+					
+				}
+				else{
+					printf("Option %s non reconnue \n", args[i]);
+					printf("Usage : (-port numport) (-tours nb_max_tours) (-grilles grille_1 ... grille_n)\n");
+					printf("Si non precises, valeurs par defaut de port = 2006 et tours = 3, et les grilles sont tirees aleatoirement\n");
+					return EXIT_FAILURE;
+				}
+			}
+		}
 	}
 	
 	nb_tours=-1;
@@ -459,7 +535,6 @@ int main(int argc, char **args){
 	pthread_attr_init(&attr);
 	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
 	
-	port = atoi(args[1]);
 	
 	FD_ZERO(&lecteursRef);
 	FD_SET(0, &lecteursRef);
@@ -619,7 +694,11 @@ int main(int argc, char **args){
 								
 								sprintf(message, "RFIN/\r\n");
 								envoyer_messages_users(map, message, strlen(message));
-								detruire_grille(grille);
+								
+								if(grillesAlea)
+									detruire_grille(grille);
+								else
+									grillesDemandees = grillesDemandees->next;
 								
 								pthread_mutex_lock(&mutex_map);
 								envoyer_bilan_tour(map);
@@ -628,7 +707,10 @@ int main(int argc, char **args){
 							}
 							
 							
-							grille = generer_grille();
+							if(grillesAlea)
+								grille = generer_grille();
+							else
+								grille = grillesDemandees->mot;
 							
 							sprintf(message, "TOUR/%s/\r\n", grille);
 							printf(message);
@@ -669,6 +751,9 @@ int main(int argc, char **args){
 
 	hashmap_free(map);
 	free_dico(dico);
+	
+	if(!grillesAlea)
+		free_grillesDemandees(grillesDemandees);
 	
 	
 	pthread_attr_destroy(&attr);
