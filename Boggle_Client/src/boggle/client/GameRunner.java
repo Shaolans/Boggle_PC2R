@@ -8,6 +8,7 @@ import boggle.client.tools.AnswerStack;
 import boggle.client.tools.Frame;
 import boggle.client.tools.UpdateGrid;
 import javafx.application.Platform;
+import javafx.scene.control.TextArea;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
 
@@ -44,9 +45,9 @@ public class GameRunner extends Thread {
 				case "BIENVENUE":
 
 					String[] scores = info[2].split("[*]");
-					bw.getSystem().appendText("---------- SCORE ----------\nNombre de tirages : "+scores[0]+"\n");
+					writeTextArea(bw.getSystem(),"---------- SCORE ----------\nNombre de tirages : "+scores[0]+"\n");
 					for(int i = 1; i < scores.length; i+=2) {
-						bw.getSystem().appendText("Utilisateur : "+scores[i]+"\t Points : "+scores[i+1]+"\n");
+						writeTextArea(bw.getSystem(),"Utilisateur : "+scores[i]+"\t Points : "+scores[i+1]+"\n");
 					}
 
 					if(info[1].length()==0) break;
@@ -63,22 +64,24 @@ public class GameRunner extends Thread {
 						frames[i%4][i/4] = new Frame(i%4, i/4, info[1].charAt(i), img, img_s);
 					}
 					Platform.runLater(new UpdateGrid(gpb, frames, as));
-					bw.getCombinaison().setDisable(false);
-					bw.getWord().setDisable(false);
+					Platform.runLater(() -> {
+						bw.getCombinaison().setDisable(false);
+						bw.getWord().setDisable(false);
+					});
 
 
 					break;
 				case "CONNECTE":
-					bw.getChatcontent().appendText("[Système] "+info[1]+" vient de se connecter.\n");
-					bw.getSystem().appendText(info[1]+" vient de se connecter.\n");
+					writeTextArea(bw.getChatcontent(),"[Système] "+info[1]+" vient de se connecter.\n");
+					writeTextArea(bw.getSystem(),info[1]+" vient de se connecter.\n");
 					break;
 				case "DECONNEXION":
-					bw.getChatcontent().appendText("[Système] "+info[1]+" vient de se déconnecter.\n");
-					bw.getSystem().appendText(info[1]+" vient de se déconnecter.\n");
+					writeTextArea(bw.getChatcontent(),"[Système] "+info[1]+" vient de se déconnecter.\n");
+					writeTextArea(bw.getSystem(),info[1]+" vient de se déconnecter.\n");
 					break;
 				case "SESSION":
-					bw.getSystem().appendText("---------- DEBUT DE SESSION ----------\n");
-					bw.getSystem().appendText("La partie va commencer dans environ 10 secondes.\n");
+					writeTextArea(bw.getSystem(),"---------- DEBUT DE SESSION ----------\n");
+					writeTextArea(bw.getSystem(),"La partie va commencer dans environ 10 secondes.\n");
 					break;
 				case "VAINQUEUR":
 
@@ -87,13 +90,11 @@ public class GameRunner extends Thread {
 						BoggleWindow.init_grid(bw.getGrid());
 					});
 
-
-
 					String []scoresfin = info[1].split("[*]");
-					bw.getSystem().appendText("---------- VAINQUEUR ----------\n");
-					bw.getSystem().appendText("Nombre total de tours : "+scoresfin[0]+"\n");
+					writeTextArea(bw.getSystem(),"---------- VAINQUEUR ----------\n");
+					writeTextArea(bw.getSystem(),"Nombre total de tours : "+scoresfin[0]+"\n");
 					for(int i = 1; i < scoresfin.length; i+=2) {
-						bw.getSystem().appendText("Utilisateur : "+scoresfin[i]+"\t Points : "+scoresfin[i+1]+"\n");
+						writeTextArea(bw.getSystem(),"Utilisateur : "+scoresfin[i]+"\t Points : "+scoresfin[i+1]+"\n");
 					}
 					break;
 				case "TOUR":
@@ -110,46 +111,51 @@ public class GameRunner extends Thread {
 						frames[i%4][i/4] = new Frame(i%4, i/4, info[1].charAt(i), img, img_s);
 					}
 					Platform.runLater(new UpdateGrid(gp, frames, as));
-					bw.getCombinaison().setDisable(false);
-					bw.getWord().setDisable(false);
-					bw.getSystem().appendText("---------- TOUR SUIVANT ----------\n");
+					Platform.runLater(() -> {
+						bw.getCombinaison().setDisable(false);
+						bw.getWord().setDisable(false);
+					});
+					writeTextArea(bw.getSystem(),"---------- TOUR SUIVANT ----------\n");
 					break;
 				case "MVALIDE":
-					bw.getSystem().appendText("Le mot "+info[1]+" est valide\n");
+					writeTextArea(bw.getSystem(),"Le mot "+info[1]+" est valide\n");
 					break;
 				case "MINVALIDE":
-					bw.getSystem().appendText("Le mot est invalide\nRAISON : "+info[1]+"\n");
+					writeTextArea(bw.getSystem(),"Le mot est invalide\nRAISON : "+info[1]+"\n");
 					break;
 				case "RFIN":
-					bw.getSystem().appendText("---------- FIN DU TOUR ----------\n");
-					bw.getCombinaison().clear();
-					bw.getCombinaison().setDisable(true);
-					bw.getWord().clear();
-					bw.getWord().setDisable(true);
+					writeTextArea(bw.getSystem(),"---------- FIN DU TOUR ----------\n");
+					Platform.runLater(() -> {
+						bw.getCombinaison().clear();
+						bw.getCombinaison().setDisable(true);
+						bw.getWord().clear();
+						bw.getWord().setDisable(true);
+					});
+					
 					break;
 				case "BILANMOTS":
 					String[] bilanscores = info[2].split("[*]");
-					bw.getSystem().appendText("---------- BILAN DU TOUR ----------\n");
-					bw.getSystem().appendText("Nombre de tours : "+bilanscores[0]+"\n");
+					writeTextArea(bw.getSystem(),"---------- BILAN DU TOUR ----------\n");
+					writeTextArea(bw.getSystem(),"Nombre de tours : "+bilanscores[0]+"\n");
 					String[] bilanmots = info[1].split("[*]");
-					bw.getSystem().appendText("Mots proposés et validé :\n");
+					writeTextArea(bw.getSystem(),"Mots proposés et validé :\n");
 					for(String mots: bilanmots) {
-						bw.getSystem().appendText("\t-"+mots+"\n");
+						writeTextArea(bw.getSystem(),"\t-"+mots+"\n");
 					}
 
-					bw.getSystem().appendText("---------- SCORE ----------\n");
+					writeTextArea(bw.getSystem(),"---------- SCORE ----------\n");
 					for(int i = 1; i < bilanscores.length; i+=2) {
-						bw.getSystem().appendText("Utilisateur : "+bilanscores[i]+"\t Points : "+bilanscores[i+1]+"\n");
+						writeTextArea(bw.getSystem(),"Utilisateur : "+bilanscores[i]+"\t Points : "+bilanscores[i+1]+"\n");
 					}
 
 					break;
 				case "RECEPTION":
 					if(info.length == 1) break;
-					bw.getChatcontent().appendText("[Message public] : "+info[1]+"\n");
+					writeTextArea(bw.getChatcontent(),"[Message public] : "+info[1]+"\n");
 					break;
 				case "PRECEPTION":
 					if(info.length == 1) break;
-					bw.getChatcontent().appendText("("+info[2]+" -> "+bw.getUsername()+") : "+info[1]+"\n");
+					writeTextArea(bw.getChatcontent(),"("+info[2]+" -> "+bw.getUsername()+") : "+info[1]+"\n");
 					break;
 				}
 
@@ -157,6 +163,10 @@ public class GameRunner extends Thread {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+	}
+	
+	private void writeTextArea(TextArea ta, String content) {
+		Platform.runLater(() -> ta.appendText(content));
 	}
 
 
