@@ -49,9 +49,12 @@ Liste_mot * grillesDemandees = NULL;
 int verif_mot(char *mot, char *traj){
 	
 	Liste_mot * pmot;
-	
+		
 	if( !verif_trajectoire(traj) )
 		return -1;
+		
+	if( strlen(mot)<3 )
+		return -4;
 		
 	if( !mot_dans_dico(dico, mot))
 		return -2;
@@ -336,7 +339,7 @@ void * traitement(void *arg){
 					v = verif_mot(argv[1], argv[2] );
 					
 					if( v == -1 ){
-						sprintf(message, "MINVALIDE/POS la trajection est erronee/\r\n");
+						sprintf(message, "MINVALIDE/POS la trajectoire est erronee/\r\n");
 					}
 					else{
 						if(v == -2 ){
@@ -347,22 +350,32 @@ void * traitement(void *arg){
 								sprintf(message, "MINVALIDE/PRI le mot a deja ete propose/\r\n");
 							}
 							else{
-								sprintf(message, "MVALIDE/%s/\r\n", argv[1]);
-								lp = malloc(sizeof(struct liste_mot));
-								memcpy(lp, argv[1], strlen(argv[1]));
-								lp -> next = info.motsProposes;
-								info.motsProposes = lp;
+								if( v == -4 ){
+									sprintf(message, "MINVALIDE/TAILLE la taille du mot doit etre supérieure ou egale a 3/\r\n");
+								}
+								else{
+									sprintf(message, "MVALIDE/%s/\r\n", argv[1]);
+									lp = malloc(sizeof(struct liste_mot));
+									memcpy(lp, argv[1], strlen(argv[1]));
+									lp -> next = info.motsProposes;
+									info.motsProposes = lp;
+									
+									nb_score = score(argv[1]);
+
+									pthread_mutex_lock(&mutex_map);
+									
+									info.score += nb_score;
+					
+									pthread_mutex_unlock(&mutex_map);
+
+
+								}
 								
-								nb_score = score(argv[1]);
-
-								pthread_mutex_lock(&mutex_map);
 								
-								info.score += nb_score;
-				
-								pthread_mutex_unlock(&mutex_map);
-
-
+								
+								
 							}
+							
 							
 						}
 						
