@@ -92,7 +92,7 @@ public class BoggleWindow {
 		HBox hbox = new HBox();
 
 		MenuBar mb = new MenuBar();
-		Menu menu = new Menu("Action");
+		Menu menu = new Menu("Choisir une action");
 
 
 		MenuItem connect = new MenuItem("Rejoindre un serveur");

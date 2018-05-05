@@ -336,25 +336,28 @@ int verif_trajectoire(char * traj){
 Liste_mot * charger_dico(){
 	
 	FILE* fichier = NULL;
-
-    char mot[27] = "";
+	int sizeBuffer = 100;
+    char mot[sizeBuffer];
 	Liste_mot * l = NULL, *lp = NULL, *res = NULL ;
 	int i;
 
-    fichier = fopen("./liste_francais.txt", "r");
+    fichier = fopen("./glaff-dictionnary-formatted.txt", "r");
 
 	l = lp;
 
     if (fichier != NULL){
 
-        while(fgets(mot, 27, fichier)){ 
+        while(fgets(mot, sizeBuffer, fichier)){ 
 			i=0;
+			
+			if(strlen(mot)>16){
+				continue;
+			}
+			
 			while(i< (int)strlen(mot)) {
 				mot[i] = (char)toupper(mot[i]);
 				i++;
 			}
-			
-			
 			
 			if(res==NULL){
 				l= malloc(sizeof(struct liste_mot));

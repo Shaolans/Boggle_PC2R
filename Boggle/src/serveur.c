@@ -23,7 +23,7 @@
 
 #define MAX_ARG 3
 #define MAX_TAILLE_MSG 10000
-#define TEMPS_TOURS 1
+#define TEMPS_TOURS 180
 
 
 typedef struct info_t {
