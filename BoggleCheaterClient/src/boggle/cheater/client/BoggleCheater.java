@@ -132,7 +132,7 @@ public class BoggleCheater {
 		Map<String, String> words = new HashMap<>();
 		for(int i = 0; i < 4; i++) {
 			for(int j = 0; j < 4; j++) {
-				computeSolution(i, j, "", "", words, dictionnary, boggle, visit);
+				computeSolution(i, j, boggle[i][j]+"", findPosition(i,j)+"", words, dictionnary, boggle, visit);
 				System.out.println("COMPUTE START POSITION "+i+" "+j+" DONE");
 			}
 		}
