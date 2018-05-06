@@ -1,0 +1,30 @@
+<project default="run">
+
+<target name="clean">
+	<delete dir="bin"/>
+	<delete dir="jar"/>
+</target>
+
+
+<target name="compile" depends="clean">
+	<mkdir dir="bin"/>
+	<javac srcdir="src" destdir="bin" classpath="."/>
+</target>
+
+
+<target name="jar" depends="compile">
+	<mkdir dir="jar"/>
+	<jar destfile="jar/Boggle_Client.jar" basedir="bin">
+		<manifest>
+			<attribute name="Main-Class" value="boggle.client.BoggleMain"/>
+		</manifest>
+		<zipgroupfileset dir="." includes="grid_init/icons/letters_img"/>
+	</jar>
+</target>
+
+
+<target name="run" depends="jar">
+	<java jar="jar/Boggle_Client.jar" fork="true"/>
+</target>
+
+</project>
