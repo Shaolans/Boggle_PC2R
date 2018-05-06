@@ -32,7 +32,6 @@ public class BoggleCheater {
 		bc.run();
 
 
-
 	}
 
 	Set<String> dictionnary;
@@ -95,7 +94,7 @@ public class BoggleCheater {
 					String msg = "TROUVE/"+entry.getKey()+"/"+entry.getValue();
 					System.out.println("TO SERVER: "+msg);
 					try {
-						Thread.sleep((long)100);
+						Thread.sleep((long)200);
 					} catch (InterruptedException e) {
 						e.printStackTrace();
 					}
@@ -108,7 +107,7 @@ public class BoggleCheater {
 					String msg = "TROUVE/"+entry.getKey()+"/"+entry.getValue();
 					System.out.println("TO SERVER: "+msg);
 					try {
-						Thread.sleep((long)100);
+						Thread.sleep((long)200);
 					} catch (InterruptedException e) {
 						e.printStackTrace();
 					}
@@ -133,8 +132,8 @@ public class BoggleCheater {
 		Map<String, String> words = new HashMap<>();
 		for(int i = 0; i < 4; i++) {
 			for(int j = 0; j < 4; j++) {
-				computeSolution(i, j, "", "", words, dictionnary, boggle, cloneVisit(visit));
-				System.out.println("COMPUTE "+i+" "+j+" DONE");
+				computeSolution(i, j, "", "", words, dictionnary, boggle, visit);
+				System.out.println("COMPUTE START POSITION "+i+" "+j+" DONE");
 			}
 		}
 
@@ -166,48 +165,62 @@ public class BoggleCheater {
 		visit[row][col] = true;
 
 		if(row+1 < boggle.length && !visit[row+1][col]) {
-			computeSolution(row+1, col, currentwords+boggle[row+1][col], currentpath+findPosition(row+1, col), words, dictionnary, boggle, cloneVisit(visit));
+			computeSolution(row+1, col, currentwords+boggle[row+1][col], currentpath+findPosition(row+1, col), words, dictionnary, boggle, visit);
 		}
 
 		if(row-1 >= 0 && !visit[row-1][col]) {
-			computeSolution(row-1, col, currentwords+boggle[row-1][col], currentpath+findPosition(row-1, col), words, dictionnary, boggle, cloneVisit(visit));
+			computeSolution(row-1, col, currentwords+boggle[row-1][col], currentpath+findPosition(row-1, col), words, dictionnary, boggle, visit);
 		}
 
 		if(col+1 < boggle[0].length && !visit[row][col+1]) {
-			computeSolution(row, col+1, currentwords+boggle[row][col+1], currentpath+findPosition(row, col+1), words, dictionnary, boggle, cloneVisit(visit));
+			computeSolution(row, col+1, currentwords+boggle[row][col+1], currentpath+findPosition(row, col+1), words, dictionnary, boggle, visit);
 		}
 
 		if(col-1 >= 0 && !visit[row][col-1]) {
-			computeSolution(row, col-1, currentwords+boggle[row][col-1], currentpath+findPosition(row, col-1), words, dictionnary, boggle, cloneVisit(visit));
+			computeSolution(row, col-1, currentwords+boggle[row][col-1], currentpath+findPosition(row, col-1), words, dictionnary, boggle, visit);
 		}
 
 		if(row+1 < boggle.length && col+1 < boggle[0].length && !visit[row+1][col+1]) {
-			computeSolution(row+1, col+1, currentwords+boggle[row+1][col+1], currentpath+findPosition(row+1, col+1), words, dictionnary, boggle, cloneVisit(visit));
+			computeSolution(row+1, col+1, currentwords+boggle[row+1][col+1], currentpath+findPosition(row+1, col+1), words, dictionnary, boggle, visit);
 		}
 
 		if(row-1 >= 0 && col-1 >= 0 && !visit[row-1][col-1]) {
-			computeSolution(row-1, col-1, currentwords+boggle[row-1][col-1], currentpath+findPosition(row-1, col-1), words, dictionnary, boggle, cloneVisit(visit));
+			computeSolution(row-1, col-1, currentwords+boggle[row-1][col-1], currentpath+findPosition(row-1, col-1), words, dictionnary, boggle, visit);
 		}
 
 		if(row+1 < boggle.length && col-1 >= 0 && !visit[row+1][col-1]) {
-			computeSolution(row+1, col-1, currentwords+boggle[row+1][col-1], currentpath+findPosition(row+1, col-1), words, dictionnary, boggle, cloneVisit(visit));
+			computeSolution(row+1, col-1, currentwords+boggle[row+1][col-1], currentpath+findPosition(row+1, col-1), words, dictionnary, boggle, visit);
 		}
 
 		if(row-1 >= 0 && col+1 < boggle[0].length && !visit[row-1][col+1]) {
-			computeSolution(row-1, col+1, currentwords+boggle[row-1][col+1], currentpath+findPosition(row-1, col+1), words, dictionnary, boggle, cloneVisit(visit));
+			computeSolution(row-1, col+1, currentwords+boggle[row-1][col+1], currentpath+findPosition(row-1, col+1), words, dictionnary, boggle, visit);
 		}
+		
+		visit[row][col] = false;
 
 	}
 
-	public static boolean[][] cloneVisit(boolean[][] visit){
-		boolean[][] clone = new boolean[visit.length][visit[0].length];
-		for(int i = 0; i < visit.length; i++) {
-			for(int j = 0; j < visit[0].length; j++) {
-				clone[i][j] = visit[i][j];
+	public static void test_compute_solution() {
+		char[][] boggle = {
+				{'L','I','D','A'},
+				{'R','E','j','U'},
+				{'L','T','N','E'},
+				{'A','T','N','G'}
+		};
+		
+		Set<String> dic = loadDictionnary("dictionnary/glaff-dictionnary-formatted.txt");
+		boolean visit[][] = new boolean[4][4];
+		Map<String, String> words = new HashMap<>();
+		for(int i = 0; i < 4; i++) {
+			for(int j = 0; j < 4; j++) {
+				computeSolution(i, j, "", "", words, dic, boggle, visit);
+				System.out.println("COMPUTE START POSITION "+i+" "+j+" DONE");
 			}
 		}
-
-		return clone;
+		
+		for(Map.Entry<String, String> entry: words.entrySet()) {
+			System.out.println("WORD FOUND: "+entry.getKey()+" "+entry.getValue());
+		}
 	}
 
 	public static String findPosition(int row, int col) {
