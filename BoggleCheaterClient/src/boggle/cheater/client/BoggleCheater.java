@@ -21,7 +21,7 @@ import java.util.Set;
 public class BoggleCheater {
 
 	public static void main(String[] args) throws NumberFormatException, UnknownHostException, IOException {
-		if(args.length < 4 || !args[0].equals("-serveur") || !args[2].equals("-port")) {
+		/*if(args.length < 4 || !args[0].equals("-serveur") || !args[2].equals("-port")) {
 			System.out.println("Veuillez lancer le BoggleCheater comme ceci: java BoggleCheater -serveur hostname -port numport");
 			return;
 		}
@@ -29,7 +29,8 @@ public class BoggleCheater {
 		BoggleCheater bc = new BoggleCheater(args[1], Integer.parseInt(args[3]));
 		Talker t = new Talker(bc);
 		t.start();
-		bc.run();
+		bc.run();*/
+		test_compute_solution();
 
 
 	}
@@ -213,7 +214,7 @@ public class BoggleCheater {
 		Map<String, String> words = new HashMap<>();
 		for(int i = 0; i < 4; i++) {
 			for(int j = 0; j < 4; j++) {
-				computeSolution(i, j, "", "", words, dic, boggle, visit);
+				computeSolution(i, j, boggle[i][j]+"", findPosition(i,j)+"", words, dic, boggle, visit);
 				System.out.println("COMPUTE START POSITION "+i+" "+j+" DONE");
 			}
 		}
