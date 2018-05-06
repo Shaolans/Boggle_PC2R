@@ -38,6 +38,7 @@ char * grille;
 char grilleVide[]="";
 map_t map ;
 pthread_mutex_t mutex_map;
+pthread_mutex_t mutex_dejaDit;
 Liste_mot * dico = NULL;
 Liste_mot * dejaDit = NULL;
 int nb_tours;
@@ -73,8 +74,11 @@ int verif_mot(char *mot, char *traj){
 	
 	pmot = malloc(sizeof(struct liste_mot) );
 	memcpy(pmot->mot, mot, strlen(mot)+1);
+	
+	pthread_mutex_lock(&mutex_dejaDit);
 	pmot->next = dejaDit;
 	dejaDit = pmot;
+	pthread_mutex_unlock(&mutex_dejaDit);
 	
 	return 0;
 	
